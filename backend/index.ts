@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import { prisma } from "./db";
 import jwt from "jsonwebtoken";
 import "dotenv";
+import * as z from "zod";
+import { v4 as uuidv4 } from "uuid";
 
 const app = express();
 app.use(express.json());
@@ -22,11 +24,11 @@ type UserBalance = {
 };
 
 type Order = {
-	userId: number;
+	userId: string;
 	qty: number;
 	filledQty: number;
-	orderId: number;
-	createdAt: string;
+	orderId: string;
+	createdAt: number;
 };
 
 type PriceLevel = {
@@ -51,37 +53,47 @@ type Status = "OPEN" | "FILLED" | "CANCELLED";
 type UserId = keyof typeof BALANCES;
 type Asset = "AXIS" | "HDFC" | "TATA";
 
+const ReceivedOrder = z.object({
+	userId: z.string(),
+	side: z.enum(["BUY", "SELL"]),
+	type: z.enum(["LIMIT", "MARKET"]),
+	symbol: z.enum(["AXIS", "HDFC", "TATA"]),
+	price: z.number(),
+	qty: z.number(),
+});
+type ReceivedOrder = z.infer<typeof ReceivedOrder>;
+
 // --- In-memory state ---
 const BALANCES: Record<string, UserBalance> = {}; // { userId: { INR: {available, locked}, AXIS: {available, locked}, ... } }
 const ORDERBOOK: OrderBook = {
 	AXIS: {
 		bids: {
-			299: {
-				totalQty: 10,
-				orders: [
-					{
-						userId: 1,
-						qty: 10,
-						filledQty: 5,
-						orderId: 10,
-						createdAt: "1 May 2026 3:30 PM",
-					},
-				],
-			},
+			// 	299: {
+			// 		totalQty: 10,
+			// 		orders: [
+			// 			{
+			// 				userId: "1",
+			// 				qty: 10,
+			// 				filledQty: 5,
+			// 				orderId: "10",
+			// 				createdAt: 1,
+			// 			},
+			// 		],
+			// 	},
 		},
 		asks: {
-			300: {
-				totalQty: 10,
-				orders: [
-					{
-						userId: 1,
-						qty: 20,
-						filledQty: 3,
-						orderId: 10,
-						createdAt: "1 May 2026 3:30 PM",
-					},
-				],
-			},
+			// 	300: {
+			// 		totalQty: 10,
+			// 		orders: [
+			// 			{
+			// 				userId: "1",
+			// 				qty: 20,
+			// 				filledQty: 3,
+			// 				orderId: "10",
+			// 				createdAt: 2,
+			// 			},
+			// 		],
+			// 	},
 		},
 	},
 	HDFC: { bids: {}, asks: {} },
@@ -187,42 +199,51 @@ app.post("/order", (req, res) => {
 	// 4. write fills to FILLS, update filledQty + status on ORDERS
 	// 5. if leftover qty and LIMIT, rest on book; if MARKET, cancel remainder
 	// 6. settle balances on each fill (move locked -> other asset's available)
-	// const { userId, side, type, symbol, price, qty } = req.body;
-	// if (!(side in ["BUY", "SELL"])) {
-	// 	res.status(401).json({ error: "Invalid side" });
-	// 	return;
-	// }
-	// if (!(type in ["LIMIT", "MARKET"])) {
-	// 	res.status(401).json({ error: "Invalid type" });
-	// 	return;
-	// }
-	// if (!(symbol in ["AXIS", "HDFC", "TATA"])) {
-	// 	res.status(401).json({ error: "Invalid stock" });
-	// }
-	// if (!userId) {
-	// 	res.status(401).json({ error: "unauthorised" });
-	// 	return;
-	// }
-	// // Check balance
-	// let asset = side === "BUY" ? "INR" : symbol;
-	// let stockBalance = BALANCES[userId]?[asset]?.available || 0;
-	// let totalAmount = price * qty;
-	// if (stockBalance >= totalAmount) {
-	// 	BALANCES[userId][asset]?.available -= totalAmount;
-	// 	BALANCES[userId][asset]?.locked += totalAmount;
-	// } else {
-	// 	res.status(401).json({ error: "Insufficient Balance" });
-	// }
-	// if (ORDERBOOK[symbol][side][price]) {
-	// 	if (ORDERBOOK[symbol][side][price].totalQty > qty) {
-	// 		ORDERBOOK[symbol][side][price].totalQty -= qty;
-	// 		ORDERBOOK[symbol][side][price].orders = ORDERBOOK[symbol][side][price].orders.filter(
-	// 			(order) => {
-	// 				order.qty - order.filledQty;
-	// 			},
-	// 		);
-	// 	}
-	// }
+
+	const parsedOrder = ReceivedOrder.safeParse(req.body);
+
+	if (!parsedOrder.success) {
+		res.status(401).json({ error: parsedOrder.error });
+		return;
+	}
+
+	const { side, type, symbol, price, qty } = parsedOrder.data;
+	const userId = req.userId;
+
+	// Check balance and lock it
+	if (!BALANCES[userId]) {
+		BALANCES[userId] = { INR: { available: 0, locked: 0 }, [symbol]: { available: 0, locked: 0 } };
+	}
+
+	if (side === "BUY") {
+		let inrBalance = BALANCES[userId].INR || { available: 0, locked: 0 };
+		let totalAmount = price * qty;
+
+		if (inrBalance.available >= totalAmount) {
+			inrBalance.available -= totalAmount;
+			inrBalance.locked += totalAmount;
+
+			BALANCES[userId].INR = inrBalance;
+		} else {
+			res.status(401).json({ error: "Insufficient Balance" });
+			return;
+		}
+	} else {
+		let stockBalance = BALANCES[userId][symbol] || { available: 0, locked: 0 };
+		if (stockBalance.available >= qty) {
+			stockBalance.available -= qty;
+			stockBalance.locked += qty;
+
+			BALANCES[userId][symbol] = stockBalance;
+		} else {
+			res.status(401).json({ error: "Insufficient Balance" });
+			return;
+		}
+	}
+
+	let result = placeOrder(parsedOrder.data);
+
+	res.status(200).json({ success: "ok" });
 });
 
 // app.delete("/order/:orderId", async (req, res) => {
@@ -301,7 +322,7 @@ app.get("/orders", async (req, res) => {
 			},
 		});
 
-		res.status(200).json({ data: orders });
+		res.status(200).json({ data: ORDERBOOK });
 	} catch (e) {
 		res.status(401).json({ error: "error fetching orders" });
 	}
@@ -363,4 +384,271 @@ app.get("/balance", (req, res) => {
 	res.status(201).json({ data: balance });
 });
 
-app.listen(3000, () => console.log("CEX running on :3000"));
+app.post("/balance", (req, res) => {
+	// return BALANCES[userId] for the authed user
+
+	const { amount } = req.body;
+	const userId = req.userId;
+
+	if (!userId) {
+		res.status(401).json({ error: "unauthorised" });
+		return;
+	}
+
+	if (!BALANCES[userId]) {
+		BALANCES[userId] = {
+			INR: {
+				available: 0,
+				locked: 0,
+			},
+			AXIS: {
+				available: 0,
+				locked: 0,
+			},
+		};
+	}
+
+	BALANCES[userId].INR!.available += amount;
+	BALANCES[userId].AXIS!.available += 10;
+	const balance = BALANCES[userId];
+
+	res.status(201).json({ data: balance });
+});
+
+app.listen(3000, () => console.log("Server running on :3000"));
+
+// Matching Engine
+function placeOrder(order: ReceivedOrder) {
+	if (order.side === "BUY") {
+		let remainingQty = matchBuyOrder(order);
+	} else {
+		let remainingQty = matchSellOrder(order);
+	}
+}
+
+function getBestBid(bids: Side) {
+	const bestBid = Math.max(...Object.keys(bids).map(Number));
+	return bestBid;
+}
+
+function getBestAsk(asks: Side) {
+	const bestAsk = Math.min(...Object.keys(asks).map(Number));
+	return bestAsk;
+}
+
+function matchBuyOrder(order: ReceivedOrder): number {
+	let remainingQty = order.qty;
+	const asks = ORDERBOOK[order.symbol]?.asks || {};
+
+	if (!BALANCES[order.userId]![order.symbol]) {
+		BALANCES[order.userId]![order.symbol] = {
+			available: 0,
+			locked: 0,
+		};
+	}
+
+	let inrBalance = BALANCES[order.userId]!.INR;
+	let stockBalance = BALANCES[order.userId]![order.symbol]!;
+
+	if (!inrBalance) {
+		throw Error("Invalid INR balance");
+	}
+
+	while (remainingQty > 0) {
+		const bestAskPrice = getBestAsk(asks);
+		if (!bestAskPrice) break;
+
+		if (order.type === "LIMIT" && bestAskPrice > order.price) {
+			break;
+		}
+
+		const priceLevel = ORDERBOOK[order.symbol]?.asks[bestAskPrice];
+		if (!priceLevel) break;
+
+		while (remainingQty > 0 && priceLevel.orders.length > 0) {
+			const restingOrder = priceLevel.orders[0]!;
+
+			let sellerINRBalance = BALANCES[restingOrder.userId]!.INR!;
+			let sellerStockBalance = BALANCES[restingOrder.userId]![order.symbol]!;
+
+			const availableQty = restingOrder.qty - restingOrder.filledQty;
+			if (inrBalance.locked < bestAskPrice * availableQty) {
+				throw Error("Insufficient locked funds");
+			}
+
+			if (remainingQty >= availableQty) {
+				remainingQty -= availableQty;
+
+				restingOrder.filledQty += availableQty;
+				inrBalance.locked -= bestAskPrice * availableQty;
+				stockBalance.available += availableQty;
+
+				sellerStockBalance.locked -= availableQty;
+				sellerINRBalance.available += bestAskPrice * availableQty;
+				priceLevel.totalQty -= availableQty;
+				priceLevel.orders.shift();
+			} else {
+				restingOrder.filledQty += remainingQty;
+				priceLevel.totalQty -= remainingQty;
+				inrBalance.locked -= bestAskPrice * remainingQty;
+				stockBalance.available += remainingQty;
+				sellerStockBalance.locked -= remainingQty;
+				sellerINRBalance.available += bestAskPrice * remainingQty;
+				remainingQty = 0;
+			}
+		}
+
+		if (priceLevel.orders.length === 0) {
+			delete asks[bestAskPrice];
+		}
+	}
+
+	if (remainingQty > 0 && order.type === "LIMIT") {
+		addOrderToBook({
+			...order,
+			qty: remainingQty,
+		});
+	}
+
+	return remainingQty;
+}
+
+function matchSellOrder(order: ReceivedOrder): number {
+	let remainingQty = order.qty;
+	const bids = ORDERBOOK[order.symbol]?.bids || {};
+
+	if (!BALANCES[order.userId]![order.symbol]) {
+		BALANCES[order.userId]![order.symbol] = {
+			available: 0,
+			locked: 0,
+		};
+	}
+
+	let stockBalance = BALANCES[order.userId]![order.symbol]!;
+	let inrBalance = BALANCES[order.userId]!.INR!;
+
+	if (!stockBalance) {
+		throw Error("Invalid stock balance");
+	}
+
+	while (remainingQty > 0) {
+		const bestBidPrice = getBestBid(bids);
+		if (!bestBidPrice) break;
+
+		if (order.type === "LIMIT" && bestBidPrice < order.price) {
+			break;
+		}
+
+		const priceLevel = ORDERBOOK[order.symbol]?.bids[bestBidPrice];
+		if (!priceLevel) break;
+
+		while (remainingQty > 0 && priceLevel.orders.length > 0) {
+			const restingOrder = priceLevel.orders[0]!;
+
+			let buyerINRBalance = BALANCES[restingOrder.userId]!.INR!;
+			let buyerStockBalance = BALANCES[restingOrder.userId]![order.symbol]!;
+
+			const availableQty = restingOrder.qty - restingOrder.filledQty;
+
+			if (stockBalance.locked < availableQty) {
+				throw Error("Insufficient locked stocks");
+			}
+
+			if (remainingQty >= availableQty) {
+				remainingQty -= availableQty;
+
+				restingOrder.filledQty += availableQty;
+
+				stockBalance.locked -= availableQty;
+				inrBalance.available += bestBidPrice * availableQty;
+
+				buyerINRBalance.locked -= bestBidPrice * availableQty;
+
+				if (!buyerStockBalance) {
+					BALANCES[restingOrder.userId]![order.symbol] = {
+						available: 0,
+						locked: 0,
+					};
+
+					buyerStockBalance = BALANCES[restingOrder.userId]![order.symbol]!;
+				}
+
+				buyerStockBalance.available += availableQty;
+
+				priceLevel.totalQty -= availableQty;
+				priceLevel.orders.shift();
+			} else {
+				restingOrder.filledQty += remainingQty;
+
+				stockBalance.locked -= remainingQty;
+				inrBalance.available += bestBidPrice * remainingQty;
+
+				buyerINRBalance.locked -= bestBidPrice * remainingQty;
+
+				if (!buyerStockBalance) {
+					BALANCES[restingOrder.userId]![order.symbol] = {
+						available: 0,
+						locked: 0,
+					};
+
+					buyerStockBalance = BALANCES[restingOrder.userId]![order.symbol]!;
+				}
+
+				buyerStockBalance.available += remainingQty;
+
+				priceLevel.totalQty -= remainingQty;
+
+				remainingQty = 0;
+			}
+		}
+
+		if (priceLevel.orders.length === 0) {
+			delete bids[bestBidPrice];
+		}
+	}
+
+	if (remainingQty > 0 && order.type === "LIMIT") {
+		addOrderToBook({
+			...order,
+			qty: remainingQty,
+		});
+	}
+
+	return remainingQty;
+}
+
+function addOrderToBook(order: ReceivedOrder) {
+	if (order.type === "MARKET") {
+		return;
+	}
+
+	if (order.qty <= 0) {
+		throw new Error("Invalid qty");
+	}
+
+	if (order.price <= 0) {
+		throw new Error("Invalid price");
+	}
+
+	const orderSide = order.side === "BUY" ? "bids" : "asks";
+	const price = String(order.price);
+	let priceLevel = ORDERBOOK[order.symbol]![orderSide][price];
+
+	const newOrder = {
+		userId: order.userId,
+		qty: order.qty,
+		filledQty: 0,
+		orderId: uuidv4(),
+		createdAt: Date.now(),
+	};
+
+	if (priceLevel) {
+		priceLevel.orders.push(newOrder);
+		priceLevel.totalQty += order.qty;
+	} else {
+		ORDERBOOK[order.symbol]![orderSide][price] = {
+			totalQty: order.qty,
+			orders: [newOrder],
+		};
+	}
+}
