@@ -1,4 +1,4 @@
-import type { Market, UserBalance } from "./types/engine";
+import type { Market, OrderRecord, UserBalance } from "./types/engine";
 
 // --- In-memory state ---
 /*
@@ -38,7 +38,7 @@ export const BALANCES: Record<string, UserBalance> = {};
 							qty: 10,
 							filledQty: 5,
 							orderId: "10",
-							createdAt: "29-05-26",
+							createdAt: 1780151880075,
 						},
 					],
 				},
@@ -52,7 +52,7 @@ export const BALANCES: Record<string, UserBalance> = {};
 							qty: 20,
 							filledQty: 3,
 							orderId: "10",
-							createdAt: "29-05-26",
+							createdAt: 1780151880075,
 						},
 					],
 				},
@@ -65,3 +65,21 @@ export const ORDERBOOK: Record<string, Market> = {
 	HDFC: { bids: {}, asks: {} },
 	TATA: { bids: {}, asks: {} },
 };
+
+/*
+	ORDERS = [
+		{
+			userId: "796f7997-a68b-4631-bc1b-2b391a4d44c2",
+			type: "LIMIT",
+			side: "BUY",
+			symbol: "AXIS",
+			price: 50,
+			qty: 2,
+			orderId: "81dbd809-d762-4d34-9a86-2fdd635f917a",
+			filledQty: 0,
+			status: "PENDING",
+			createdAt: 1780151880075,
+		},
+	];
+*/
+export const ORDERS: OrderRecord[] = [];

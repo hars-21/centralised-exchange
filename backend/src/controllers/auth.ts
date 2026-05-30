@@ -24,7 +24,7 @@ export async function signup(req: Request, res: Response) {
 			},
 		});
 
-		// initWallet(user.id);
+		initWallet(user.id);
 
 		res.status(201).json({
 			token: createtoken({ id: user.id }),

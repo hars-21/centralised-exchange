@@ -8,6 +8,10 @@ export const orderIdParamSchema = z.object({
 	orderId: z.string().trim().min(1, "orderId is required"),
 });
 
+export const statusQuerySchema = z.object({
+	status: z.enum(["PENDING", "PARTIALLY_FILLED", "FILLED", "CANCELLED"]).optional(),
+});
+
 export const orderBodySchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("LIMIT"),
