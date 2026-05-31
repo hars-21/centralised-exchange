@@ -8,6 +8,7 @@ import {
 import { deleteOrder, fetchOrders, placeOrder } from "../engine";
 import { getUserBalance } from "../balances";
 import { getSymbolDepth } from "../orderbook";
+import { client, engineResponse, QUEUE_ID } from "../redis";
 
 function getUserId(req: Request): string {
 	if (!req.userId) {
@@ -20,6 +21,8 @@ export async function createOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
 	const parsedBody = orderBodySchema.safeParse(req.body);
 
+	const identifier = Math.random();
+
 	if (!parsedBody.success) {
 		res.status(401).json({ error: parsedBody.error });
 		return;
@@ -29,16 +32,34 @@ export async function createOrder(req: Request, res: Response) {
 	const price = type === "MARKET" ? null : parsedBody.data.price;
 
 	try {
-		const engineResponse = placeOrder({
-			userId,
-			type,
-			side,
-			symbol,
-			price: type === "MARKET" ? null : price,
-			qty,
-		});
+		// const engineResponse = placeOrder({
+		// 	userId,
+		// 	type,
+		// 	side,
+		// 	symbol,
+		// 	price: type === "MARKET" ? null : price,
+		// 	qty,
+		// });
 
-		res.status(200).json(engineResponse);
+		const pendingResponse = engineResponse(identifier);
+
+		await client.lPush(
+			"incoming-order",
+			JSON.stringify({
+				userId,
+				type,
+				side,
+				symbol,
+				price: type === "MARKET" ? null : price,
+				qty,
+				identifier,
+				queueId: QUEUE_ID,
+			}),
+		);
+
+		const returnedData = await pendingResponse;
+
+		res.status(200).json({ message: "order placed", filledQty: returnedData.filledQty });
 	} catch (e) {
 		res.status(400).json({ error: e });
 		return;
