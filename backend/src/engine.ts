@@ -1,5 +1,5 @@
 import { lockBalance, releaseBalance, settleTrades } from "./balances";
-import { addOrderToBook, getBestAsk, getBestBid } from "./orderbook";
+import { addOrderToBook, getBestAsk, getBestBid, removeOrderFromBook } from "./orderbook";
 import { ORDERBOOK, ORDERS } from "./store";
 import type { CreateOrderInput, OrderRecord, Status, Trade } from "./types/engine";
 import { v4 as uuidv4 } from "uuid";
@@ -51,8 +51,24 @@ export function fetchOrders(userId: string, status?: Status) {
 	return orders;
 }
 
-// TODO
-export function deleteOrder() {}
+export function deleteOrder(orderId: string, userId: string) {
+	const order = ORDERS.find((order) => order.orderId === orderId && order.userId === userId);
+
+	if (!order) throw new Error("Invalid orderId");
+
+	removeOrderFromBook(order);
+
+	const releasedFunds = releaseBalance(order);
+
+	order.status = "CANCELLED";
+
+	return {
+		orderId: order.orderId,
+		status: order.status,
+		releasedFunds,
+		remainingQty: order.qty - order.filledQty,
+	};
+}
 
 function matchBuyOrder(order: OrderRecord): Trade[] {
 	let remainingQty = order.qty - order.filledQty;

@@ -19,4 +19,4 @@ exchangeRouter.get("/fills/:symbol", requireAuth, asyncHandler(getFills));
 exchangeRouter.get("/stocks", requireAuth, asyncHandler(getStocks));
 exchangeRouter.get("/balance", requireAuth, asyncHandler(getBalance));
 exchangeRouter.post("/order", requireAuth, asyncHandler(createOrder));
-exchangeRouter.delete("/order", requireAuth, asyncHandler(cancelOrder));
+exchangeRouter.delete("/order/:orderId", requireAuth, asyncHandler(cancelOrder));

@@ -117,8 +117,8 @@ export async function getStocks(req: Request, res: Response) {
 	}
 }
 
-// TODO
 export async function cancelOrder(req: Request, res: Response) {
+	const userId = getUserId(req);
 	const parsedBody = orderIdParamSchema.safeParse(req.params);
 
 	if (!parsedBody.success) {
@@ -128,9 +128,9 @@ export async function cancelOrder(req: Request, res: Response) {
 
 	const { orderId } = parsedBody.data;
 	try {
-		const orders = deleteOrder();
+		const order = deleteOrder(orderId, userId);
 
-		res.status(200).json({ message: "order successfully deleted" });
+		res.status(200).json({ ...order });
 	} catch (e) {
 		res.status(401).json({ error: "invalid orderId" });
 	}
