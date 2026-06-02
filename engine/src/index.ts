@@ -6,7 +6,7 @@ await connectRedis();
 console.log("Engine listening on Redis queue: incoming-order");
 
 async function sendResponse(responseQueue: string, response: EngineResponse) {
-	await publisher.lPush("response-queue-" + responseQueue, JSON.stringify(response));
+	await publisher.lPush(responseQueue, JSON.stringify(response));
 }
 
 while (1) {

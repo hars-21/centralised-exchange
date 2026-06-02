@@ -1,9 +1,8 @@
 import { createClient } from "redis";
-import { v4 as uuidv4 } from "uuid";
 import type { EngineCommandType, EngineResponse } from "../types/engine";
 import { resolveEngineResponse, waitForEngineResponse } from "../store/pendingResponses";
 
-export const QUEUE_ID = Math.random();
+export const QUEUE_ID = crypto.randomUUID();
 
 const publisher = createClient().on("error", (err) => console.log("Redis client error: ", err));
 
@@ -21,7 +20,7 @@ export async function sendToEngine(
 	type: EngineCommandType,
 	payload: Record<string, unknown>,
 ): Promise<EngineResponse> {
-	const correlationId = uuidv4();
+	const correlationId = crypto.randomUUID();
 	const responsePromise = waitForEngineResponse(correlationId);
 
 	const message = {
@@ -37,8 +36,7 @@ export async function sendToEngine(
 
 export async function listenForEngineresponses(): Promise<void> {
 	while (1) {
-		const response = await subscriber.brPop("response-queue-" + QUEUE_ID, 1);
-
+		const response = await subscriber.brPop(QUEUE_ID, 1);
 		if (!response) continue;
 
 		try {

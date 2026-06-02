@@ -1,6 +1,6 @@
 import { getBestAsk } from "./orderbook";
 import { BALANCES, ORDERS } from "./store";
-import type { CreateOrderInput, OrderRecord, Trade, UserBalance } from "./types/engine";
+import type { CreateOrderInput, OrderRecord, Fill, UserBalance } from "./types/store";
 
 export function initWallet(userId: string) {
 	BALANCES[userId] = {
@@ -59,9 +59,9 @@ export function lockBalance(order: CreateOrderInput) {
 	}
 }
 
-export function settleTrades(trades: Trade[]) {
-	trades.forEach((trade) => {
-		const { buyOrderId, sellOrderId, qty, price } = trade;
+export function settleTrades(fills: Fill[]) {
+	fills.forEach((fill) => {
+		const { buyOrderId, sellOrderId, qty, price } = fill;
 
 		const buyOrder = ORDERS.find((order) => order.orderId === buyOrderId);
 		const sellOrder = ORDERS.find((order) => order.orderId === sellOrderId);
@@ -111,6 +111,8 @@ export function releaseBalance(order: OrderRecord) {
 			currencyBalance.locked -= remainingAmount;
 
 			BALANCES[userId]!.INR = currencyBalance;
+
+			return remainingAmount;
 		} else {
 			throw new Error("Insufficient Locked Balance");
 		}
@@ -121,6 +123,8 @@ export function releaseBalance(order: OrderRecord) {
 			stockBalance.locked -= remainingQty;
 
 			BALANCES[userId]![symbol] = stockBalance;
+
+			return remainingQty;
 		} else {
 			throw new Error("Insufficient Locked Balance");
 		}

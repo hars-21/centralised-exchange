@@ -21,7 +21,7 @@ export async function createOrder(req: Request, res: Response) {
 	const { side, type, symbol, qty } = parsedBody.data;
 	const price = type === "MARKET" ? null : parsedBody.data.price;
 
-	const engineResponse = await sendToEngine("place_order", {
+	const engineResponse = await sendToEngine("create_order", {
 		userId,
 		type,
 		side,
@@ -40,7 +40,7 @@ export async function createOrder(req: Request, res: Response) {
 
 export async function getOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
-	const parsedBody = orderIdParamSchema.safeParse(req.query);
+	const parsedBody = orderIdParamSchema.safeParse(req.params);
 
 	if (!parsedBody.success) {
 		res.status(401).json({ error: parsedBody.error });
@@ -126,7 +126,7 @@ export async function cancelOrder(req: Request, res: Response) {
 	}
 
 	const { orderId } = parsedBody.data;
-	const engineResponse = await sendToEngine("cancel_order", { orderId, userId });
+	const engineResponse = await sendToEngine("cancel_order", { userId, orderId });
 
 	if (!engineResponse.success) {
 		res.status(400).json({ error: engineResponse.error });

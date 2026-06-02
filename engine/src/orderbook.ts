@@ -1,5 +1,6 @@
+import type { any } from "zod";
 import { ORDERBOOK } from "./store";
-import type { OrderRecord, RestingOrder } from "./types/engine";
+import type { OrderRecord, PriceLevel, RestingOrder } from "./types/store";
 
 export function getBestBid(symbol: string) {
 	const bids = ORDERBOOK[symbol]!.bids;
@@ -69,7 +70,7 @@ export function removeOrderFromBook(order: OrderRecord) {
 	}
 
 	priceLevel.orders = priceLevel.orders.filter(
-		(restingOrder) =>
+		(restingOrder: RestingOrder) =>
 			restingOrder.orderId !== order.orderId && restingOrder.userId !== order.userId,
 	);
 	priceLevel.totalQty -= order.qty - order.filledQty;
@@ -81,24 +82,28 @@ export function removeOrderFromBook(order: OrderRecord) {
 	}
 }
 
-export function getSymbolDepth(symbol: string) {
+export function getDepth(symbol: string) {
 	const orderbook = ORDERBOOK[symbol];
 
 	if (!orderbook) {
 		throw new Error("Invalid symbol");
 	}
 
-	const bids = Object.entries(orderbook.bids).map(([price, level]) => ({
-		price: Number(price),
-		qty: level.totalQty,
-	}));
-	bids.sort((a, b) => b.price - a.price);
+	const bids: Record<string, PriceLevel> = orderbook.bids;
 
-	const asks = Object.entries(orderbook.asks).map(([price, level]) => ({
+	const bidsArr = Object.entries(bids).map(([price, level]) => ({
 		price: Number(price),
 		qty: level.totalQty,
 	}));
-	asks.sort((a, b) => a.price - b.price);
+	bidsArr.sort((a, b) => b.price - a.price);
+
+	const asks: Record<string, PriceLevel> = orderbook.asks;
+
+	const asksArr = Object.entries(asks).map(([price, level]) => ({
+		price: Number(price),
+		qty: level.totalQty,
+	}));
+	asksArr.sort((a, b) => a.price - b.price);
 
 	return {
 		symbol,

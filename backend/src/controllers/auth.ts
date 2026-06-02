@@ -3,7 +3,6 @@ import { prisma } from "../db";
 import type { Request, Response } from "express";
 import { authSchema } from "../types/auth";
 import { createtoken } from "../utils/auth";
-import { initWallet } from "../balances";
 
 export async function signup(req: Request, res: Response) {
 	const parsedBody = authSchema.safeParse(req.body);
@@ -23,8 +22,6 @@ export async function signup(req: Request, res: Response) {
 				password: hashedPassword,
 			},
 		});
-
-		initWallet(user.id);
 
 		res.status(201).json({
 			token: createtoken({ id: user.id }),

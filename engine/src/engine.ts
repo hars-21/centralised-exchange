@@ -1,15 +1,14 @@
-import { lockBalance, releaseBalance, settleTrades } from "./balances";
+import { lockBalance, releaseBalance, settleTrades } from "./balance";
 import { addOrderToBook, getBestAsk, getBestBid, removeOrderFromBook } from "./orderbook";
 import { ORDERBOOK, ORDERS } from "./store";
-import type { CreateOrderInput, OrderRecord, Trade } from "./types/engine";
-import { v4 as uuidv4 } from "uuid";
+import type { CreateOrderInput, OrderRecord, Fill } from "./types/store";
 
 export function placeOrder(orderInput: CreateOrderInput) {
 	lockBalance(orderInput);
 
 	const order: OrderRecord = {
 		...orderInput,
-		orderId: uuidv4(),
+		orderId: crypto.randomUUID(),
 		filledQty: 0,
 		status: "PENDING",
 		createdAt: Date.now(),
@@ -35,16 +34,15 @@ export function placeOrder(orderInput: CreateOrderInput) {
 	};
 }
 
-export function fetchOrder(userId: string, orderId: string) {
-	const order = ORDERS.find((order) => {
-		order.orderId === orderId && order.userId === userId;
-	});
+export function getOrder(userId: string, orderId: string) {
+	const order = ORDERS.find((order) => order.orderId === orderId && order.userId === userId);
 
 	return order;
 }
 
-export function deleteOrder(orderId: string, userId: string) {
+export function cancelOrder(userId: string, orderId: string) {
 	const order = ORDERS.find((order) => order.orderId === orderId && order.userId === userId);
+	console.log(order);
 
 	if (!order) throw new Error("Invalid orderId");
 
@@ -62,10 +60,10 @@ export function deleteOrder(orderId: string, userId: string) {
 	};
 }
 
-function matchBuyOrder(order: OrderRecord): Trade[] {
+function matchBuyOrder(order: OrderRecord): Fill[] {
 	let remainingQty = order.qty - order.filledQty;
 	const asks = ORDERBOOK[order.symbol]?.asks ?? {};
-	let trades: Trade[] = [];
+	let fills: Fill[] = [];
 
 	while (remainingQty > 0) {
 		const bestAskPrice = getBestAsk(order.symbol);
@@ -95,11 +93,14 @@ function matchBuyOrder(order: OrderRecord): Trade[] {
 				order.filledQty += availableQty;
 				order.status = "PARTIALLY_FILLED";
 
-				trades.push({
+				fills.push({
+					fillId: crypto.randomUUID(),
+					symbol: order.symbol,
+					price: bestAskPrice,
+					qty: availableQty,
 					buyOrderId: order.orderId,
 					sellOrderId: restingOrder.orderId,
-					qty: availableQty,
-					price: bestAskPrice,
+					createdAt: Date.now(),
 				});
 
 				priceLevel.totalQty -= availableQty;
@@ -111,11 +112,14 @@ function matchBuyOrder(order: OrderRecord): Trade[] {
 				order.filledQty += remainingQty;
 				order.status = "FILLED";
 
-				trades.push({
+				fills.push({
+					fillId: crypto.randomUUID(),
+					symbol: order.symbol,
+					price: bestAskPrice,
+					qty: remainingQty,
 					buyOrderId: order.orderId,
 					sellOrderId: restingOrder.orderId,
-					qty: remainingQty,
-					price: bestAskPrice,
+					createdAt: Date.now(),
 				});
 
 				remainingQty = 0;
@@ -131,13 +135,13 @@ function matchBuyOrder(order: OrderRecord): Trade[] {
 		addOrderToBook(order);
 	}
 
-	return trades;
+	return fills;
 }
 
-function matchSellOrder(order: OrderRecord): Trade[] {
+function matchSellOrder(order: OrderRecord): Fill[] {
 	let remainingQty = order.qty - order.filledQty;
 	const bids = ORDERBOOK[order.symbol]?.bids ?? {};
-	let trades: Trade[] = [];
+	let fills: Fill[] = [];
 
 	while (remainingQty > 0) {
 		const bestBidPrice = getBestBid(order.symbol);
@@ -167,11 +171,14 @@ function matchSellOrder(order: OrderRecord): Trade[] {
 				order.filledQty += availableQty;
 				order.status = "PARTIALLY_FILLED";
 
-				trades.push({
+				fills.push({
+					fillId: crypto.randomUUID(),
+					symbol: order.symbol,
+					price: bestBidPrice,
+					qty: availableQty,
 					buyOrderId: restingOrder.orderId,
 					sellOrderId: order.orderId,
-					qty: availableQty,
-					price: bestBidPrice,
+					createdAt: Date.now(),
 				});
 
 				priceLevel.totalQty -= availableQty;
@@ -183,11 +190,14 @@ function matchSellOrder(order: OrderRecord): Trade[] {
 				order.filledQty += remainingQty;
 				order.status = "FILLED";
 
-				trades.push({
+				fills.push({
+					fillId: crypto.randomUUID(),
+					symbol: order.symbol,
+					price: bestBidPrice,
+					qty: remainingQty,
 					buyOrderId: restingOrder.orderId,
 					sellOrderId: order.orderId,
-					qty: remainingQty,
-					price: bestBidPrice,
+					createdAt: Date.now(),
 				});
 
 				remainingQty = 0;
@@ -203,5 +213,5 @@ function matchSellOrder(order: OrderRecord): Trade[] {
 		addOrderToBook(order);
 	}
 
-	return trades;
+	return fills;
 }

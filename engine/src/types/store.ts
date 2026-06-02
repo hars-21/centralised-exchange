@@ -1,0 +1,73 @@
+export type Side = "BUY" | "SELL";
+export type OrderType = "LIMIT" | "MARKET";
+export type OrderStatus = "PENDING" | "PARTIALLY_FILLED" | "FILLED" | "CANCELLED";
+
+export interface Balance {
+	available: number;
+	locked: number;
+}
+
+export interface UserBalance {
+	[asset: string]: Balance;
+}
+
+export interface RestingOrder {
+	userId: string;
+	qty: number;
+	filledQty: number;
+	orderId: string;
+	createdAt: number;
+}
+
+export interface OrderRecord {
+	orderId: string;
+	userId: string;
+	side: Side;
+	type: OrderType;
+	symbol: string;
+	price: number | null;
+	qty: number;
+	filledQty: number;
+	status: OrderStatus;
+	createdAt: number;
+}
+
+export interface Fill {
+	fillId: string;
+	symbol: string;
+	price: number;
+	qty: number;
+	buyOrderId: string;
+	sellOrderId: string;
+	createdAt: number;
+}
+
+export interface PriceLevel {
+	totalQty: number;
+	orders: RestingOrder[];
+}
+
+export interface Market {
+	bids: Record<string, PriceLevel>;
+	asks: Record<string, PriceLevel>;
+}
+
+export interface CreateOrderInput {
+	userId: string;
+	side: Side;
+	type: OrderType;
+	symbol: string;
+	price: number | null;
+	qty: number;
+}
+
+export interface DepthLevel {
+	price: number;
+	qty: number;
+}
+
+export interface Depth {
+	symbol: string;
+	bids: DepthLevel[];
+	asks: DepthLevel[];
+}
