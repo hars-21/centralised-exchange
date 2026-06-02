@@ -2,7 +2,10 @@ import "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { authRouter } from "./routes/auth";
 import { exchangeRouter } from "./routes/exchange";
+import { connectRedis, listenForEngineresponses, pingRedis, QUEUE_ID } from "./utils/engineClient";
 
+await connectRedis();
+void listenForEngineresponses();
 const app = express();
 
 app.use(express.json());
@@ -16,7 +19,8 @@ app.get("/", (_req: Request, res: Response) => {
 	});
 });
 
-app.get("/health", (_req: Request, res: Response) => {
+app.get("/health", async (_req: Request, res: Response) => {
+	await pingRedis();
 	res.status(200).json({ success: true });
 });
 
@@ -30,4 +34,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 	});
 });
 
-app.listen(3000, () => console.log("Server running on :3000"));
+app.listen(3000, () => {
+	console.log("Server running on :3000");
+	console.log("Response queue: ", QUEUE_ID);
+});

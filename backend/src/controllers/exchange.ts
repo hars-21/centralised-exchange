@@ -1,14 +1,6 @@
 import type { Request, Response } from "express";
-import {
-	orderBodySchema,
-	orderIdParamSchema,
-	statusQuerySchema,
-	symbolParamSchema,
-} from "../types/exchange";
-import { deleteOrder, fetchOrders, placeOrder } from "../engine";
-import { getUserBalance } from "../balances";
-import { getSymbolDepth } from "../orderbook";
-import { client, engineResponse, QUEUE_ID } from "../redis";
+import { orderBodySchema, orderIdParamSchema, symbolParamSchema } from "../types/exchange";
+import { sendToEngine } from "../utils/engineClient";
 
 function getUserId(req: Request): string {
 	if (!req.userId) {
@@ -21,8 +13,6 @@ export async function createOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
 	const parsedBody = orderBodySchema.safeParse(req.body);
 
-	const identifier = Math.random();
-
 	if (!parsedBody.success) {
 		res.status(401).json({ error: parsedBody.error });
 		return;
@@ -31,59 +21,42 @@ export async function createOrder(req: Request, res: Response) {
 	const { side, type, symbol, qty } = parsedBody.data;
 	const price = type === "MARKET" ? null : parsedBody.data.price;
 
-	try {
-		// const engineResponse = placeOrder({
-		// 	userId,
-		// 	type,
-		// 	side,
-		// 	symbol,
-		// 	price: type === "MARKET" ? null : price,
-		// 	qty,
-		// });
+	const engineResponse = await sendToEngine("place_order", {
+		userId,
+		type,
+		side,
+		symbol,
+		price: type === "MARKET" ? null : price,
+		qty,
+	});
 
-		const pendingResponse = engineResponse(identifier);
-
-		await client.lPush(
-			"incoming-order",
-			JSON.stringify({
-				userId,
-				type,
-				side,
-				symbol,
-				price: type === "MARKET" ? null : price,
-				qty,
-				identifier,
-				queueId: QUEUE_ID,
-			}),
-		);
-
-		const returnedData = await pendingResponse;
-
-		res.status(200).json({ message: "order placed", filledQty: returnedData.filledQty });
-	} catch (e) {
-		res.status(400).json({ error: e });
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
 		return;
 	}
+
+	res.status(200).json(engineResponse.data);
 }
 
-export async function getOrders(req: Request, res: Response) {
+export async function getOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
-	const parsedBody = statusQuerySchema.safeParse(req.query);
+	const parsedBody = orderIdParamSchema.safeParse(req.query);
 
 	if (!parsedBody.success) {
 		res.status(401).json({ error: parsedBody.error });
 		return;
 	}
 
-	const { status } = parsedBody.data;
+	const { orderId } = parsedBody.data;
 
-	try {
-		const orders = fetchOrders(userId, status);
+	const engineResponse = await sendToEngine("get_order", { userId, orderId });
 
-		res.status(200).json({ data: orders });
-	} catch (e) {
-		res.status(401).json({ error: "error fetching orders" });
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
 	}
+
+	res.status(200).json(engineResponse.data);
 }
 
 export async function getDepth(req: Request, res: Response) {
@@ -96,22 +69,27 @@ export async function getDepth(req: Request, res: Response) {
 
 	const { symbol } = parsedBody.data;
 
-	try {
-		const engineResponse = getSymbolDepth(symbol);
+	const engineResponse = await sendToEngine("get_depth", { symbol });
 
-		res.status(200).json(engineResponse);
-	} catch (e) {
-		res.status(400).json({ error: e });
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
 		return;
 	}
+
+	res.status(200).json(engineResponse.data);
 }
 
 export async function getBalance(req: Request, res: Response) {
 	const userId = getUserId(req);
 
-	const balance = getUserBalance(userId);
+	const engineResponse = await sendToEngine("get_user_balance", { userId });
 
-	res.status(200).json(balance);
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
+	}
+
+	res.status(200).json(engineResponse.data);
 }
 
 // TODO
@@ -148,11 +126,12 @@ export async function cancelOrder(req: Request, res: Response) {
 	}
 
 	const { orderId } = parsedBody.data;
-	try {
-		const order = deleteOrder(orderId, userId);
+	const engineResponse = await sendToEngine("cancel_order", { orderId, userId });
 
-		res.status(200).json({ ...order });
-	} catch (e) {
-		res.status(401).json({ error: "invalid orderId" });
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
 	}
+
+	res.status(200).json(engineResponse.data);
 }

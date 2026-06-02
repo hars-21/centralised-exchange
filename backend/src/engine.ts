@@ -1,7 +1,7 @@
 import { lockBalance, releaseBalance, settleTrades } from "./balances";
 import { addOrderToBook, getBestAsk, getBestBid, removeOrderFromBook } from "./orderbook";
 import { ORDERBOOK, ORDERS } from "./store";
-import type { CreateOrderInput, OrderRecord, Status, Trade } from "./types/engine";
+import type { CreateOrderInput, OrderRecord, Trade } from "./types/engine";
 import { v4 as uuidv4 } from "uuid";
 
 export function placeOrder(orderInput: CreateOrderInput) {
@@ -35,20 +35,12 @@ export function placeOrder(orderInput: CreateOrderInput) {
 	};
 }
 
-export function fetchOrders(userId: string, status?: Status) {
-	const orders = ORDERS.filter((order) => {
-		if (order.userId !== userId) {
-			return false;
-		}
-
-		if (status && order.status !== status) {
-			return false;
-		}
-
-		return true;
+export function fetchOrder(userId: string, orderId: string) {
+	const order = ORDERS.find((order) => {
+		order.orderId === orderId && order.userId === userId;
 	});
 
-	return orders;
+	return order;
 }
 
 export function deleteOrder(orderId: string, userId: string) {

@@ -7,13 +7,13 @@ import {
 	getBalance,
 	getDepth,
 	getFills,
-	getOrders,
+	getOrder,
 	getStocks,
 } from "../controllers/exchange";
 
 export const exchangeRouter = Router();
 
-exchangeRouter.get("/orders", requireAuth, asyncHandler(getOrders));
+exchangeRouter.get("/order/:orderId", requireAuth, asyncHandler(getOrder));
 exchangeRouter.get("/orderbook/:symbol", requireAuth, asyncHandler(getDepth));
 exchangeRouter.get("/fills/:symbol", requireAuth, asyncHandler(getFills));
 exchangeRouter.get("/stocks", requireAuth, asyncHandler(getStocks));
