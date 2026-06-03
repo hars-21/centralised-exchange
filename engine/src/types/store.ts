@@ -1,6 +1,6 @@
 export type Side = "BUY" | "SELL";
 export type OrderType = "LIMIT" | "MARKET";
-export type OrderStatus = "PENDING" | "PARTIALLY_FILLED" | "FILLED" | "CANCELLED";
+export type OrderStatus = "OPEN" | "PARTIALLY_FILLED" | "FILLED" | "CANCELLED";
 
 export interface Balance {
 	available: number;
@@ -29,6 +29,8 @@ export interface OrderRecord {
 	qty: number;
 	filledQty: number;
 	status: OrderStatus;
+	lockedAmount: number;
+	fills: Fill[];
 	createdAt: number;
 }
 

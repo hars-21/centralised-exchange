@@ -9,7 +9,7 @@ export const orderIdParamSchema = z.object({
 });
 
 export const statusQuerySchema = z.object({
-	status: z.enum(["PENDING", "PARTIALLY_FILLED", "FILLED", "CANCELLED"]).optional(),
+	status: z.enum(["OPEN", "PARTIALLY_FILLED", "FILLED", "CANCELLED"]).optional(),
 });
 
 export const orderBodySchema = z.discriminatedUnion("type", [

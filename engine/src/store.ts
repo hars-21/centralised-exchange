@@ -1,4 +1,4 @@
-import type { Market, OrderRecord, UserBalance } from "../../backend/src/types/engine";
+import type { Market, OrderRecord, UserBalance } from "./types/store";
 
 // --- In-memory state ---
 /*
@@ -62,9 +62,9 @@ export const BALANCES: Record<string, UserBalance> = {};
 	};
 */
 export const ORDERBOOK: Record<string, Market> = {
-	AXIS: { bids: {}, asks: {} },
-	HDFC: { bids: {}, asks: {} },
-	TATA: { bids: {}, asks: {} },
+	BTC: { bids: {}, asks: {} },
+	SOL: { bids: {}, asks: {} },
+	ETH: { bids: {}, asks: {} },
 };
 
 /*
@@ -73,12 +73,12 @@ export const ORDERBOOK: Record<string, Market> = {
 			userId: "796f7997-a68b-4631-bc1b-2b391a4d44c2",
 			type: "LIMIT",
 			side: "BUY",
-			symbol: "AXIS",
+			symbol: "SOL",
 			price: 50,
 			qty: 2,
 			orderId: "81dbd809-d762-4d34-9a86-2fdd635f917a",
 			filledQty: 0,
-			status: "PENDING",
+			status: "OPEN",
 			createdAt: 1780151880075,
 		},
 	];

@@ -1,16 +1,19 @@
-import type { any } from "zod";
 import { ORDERBOOK } from "./store";
 import type { OrderRecord, PriceLevel, RestingOrder } from "./types/store";
 
 export function getBestBid(symbol: string) {
 	const bids = ORDERBOOK[symbol]!.bids;
-	const bestBid = Math.max(...Object.keys(bids).map(Number));
+	const bidPrices = Object.keys(bids).map(Number);
+
+	const bestBid = bidPrices.length > 0 ? Math.max(...bidPrices) : null;
 	return bestBid;
 }
 
 export function getBestAsk(symbol: string) {
 	const asks = ORDERBOOK[symbol]!.asks;
-	const bestAsk = Math.min(...Object.keys(asks).map(Number));
+	const askPrices = Object.keys(asks).map(Number);
+
+	const bestAsk = askPrices.length > 0 ? Math.min(...askPrices) : null;
 	return bestAsk;
 }
 
@@ -107,7 +110,7 @@ export function getDepth(symbol: string) {
 
 	return {
 		symbol,
-		bids,
-		asks,
+		bids: bidsArr,
+		asks: asksArr,
 	};
 }
