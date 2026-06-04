@@ -120,7 +120,7 @@ export function releaseBalance(order: OrderRecord) {
 	const { userId, side, symbol, lockedAmount, qty, filledQty, fills } = order;
 
 	if (side === "BUY") {
-		const totalAmount = fills.reduce((total, fill) => total + fill.price, 0) * filledQty;
+		const totalAmount = fills.reduce((total, fill) => total + fill.price * fill.qty, 0);
 		const remainingAmount = lockedAmount - totalAmount;
 		const currencyBalance = BALANCES[userId]!.INR!;
 

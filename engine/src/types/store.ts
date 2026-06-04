@@ -12,10 +12,16 @@ export interface UserBalance {
 }
 
 export interface RestingOrder {
+	orderId: string;
 	userId: string;
+	side: Side;
+	type: "LIMIT";
+	symbol: string;
+	price: number;
 	qty: number;
 	filledQty: number;
-	orderId: string;
+	status: OrderStatus;
+	fills: Fill[];
 	createdAt: number;
 }
 

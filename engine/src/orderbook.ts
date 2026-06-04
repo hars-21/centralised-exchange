@@ -33,21 +33,13 @@ export function addOrderToBook(order: OrderRecord) {
 	const orderSide = order.side === "BUY" ? "bids" : "asks";
 	let priceLevel = ORDERBOOK[order.symbol]![orderSide][order.price];
 
-	const newOrder: RestingOrder = {
-		userId: order.userId,
-		qty: order.qty,
-		filledQty: order.filledQty,
-		orderId: order.orderId,
-		createdAt: order.createdAt,
-	};
-
 	if (priceLevel) {
-		priceLevel.orders.push(newOrder);
+		priceLevel.orders.push(order as RestingOrder);
 		priceLevel.totalQty += order.qty - order.filledQty;
 	} else {
 		ORDERBOOK[order.symbol]![orderSide][order.price] = {
 			totalQty: order.qty - order.filledQty,
-			orders: [newOrder],
+			orders: [order as RestingOrder],
 		};
 	}
 }
