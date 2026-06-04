@@ -1,0 +1,193 @@
+import { beforeEach, expect, test } from "bun:test";
+import { getDepth } from "../src/orderbook";
+import { cancelOrder, placeOrder } from "../src/engine";
+import { resetState } from "./utils";
+
+beforeEach(() => {
+	resetState();
+});
+
+test("empty orderbook", () => {
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [],
+		asks: [],
+	});
+});
+
+test("bids sorted highest first", () => {
+	placeOrder({
+		userId: "1",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+	placeOrder({
+		userId: "1",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 120,
+		qty: 3,
+	});
+	placeOrder({
+		userId: "1",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 90,
+		qty: 2,
+	});
+
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [
+			{
+				price: 120,
+				qty: 3,
+			},
+			{
+				price: 100,
+				qty: 5,
+			},
+			{
+				price: 90,
+				qty: 2,
+			},
+		],
+		asks: [],
+	});
+});
+
+test("asks sorted lowest first", () => {
+	placeOrder({
+		userId: "1",
+		side: "SELL",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 120,
+		qty: 3,
+	});
+	placeOrder({
+		userId: "1",
+		side: "SELL",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+	placeOrder({
+		userId: "1",
+		side: "SELL",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 90,
+		qty: 2,
+	});
+
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [],
+		asks: [
+			{
+				price: 90,
+				qty: 2,
+			},
+			{
+				price: 100,
+				qty: 5,
+			},
+			{
+				price: 120,
+				qty: 3,
+			},
+		],
+	});
+});
+
+test("same price orders should be grouped", () => {
+	placeOrder({
+		userId: "1",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 3,
+	});
+	placeOrder({
+		userId: "1",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [
+			{
+				price: 100,
+				qty: 8,
+			},
+		],
+		asks: [],
+	});
+});
+
+test("filled orders should not appear", () => {
+	placeOrder({
+		userId: "1",
+		side: "SELL",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+	placeOrder({
+		userId: "2",
+		side: "BUY",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [],
+		asks: [],
+	});
+});
+
+test("cancelled orders should not appear", () => {
+	const order = placeOrder({
+		userId: "1",
+		side: "SELL",
+		type: "LIMIT",
+		symbol: "BTC",
+		price: 100,
+		qty: 5,
+	});
+	cancelOrder("1", order.orderId);
+
+	const depth = getDepth("BTC");
+
+	expect(depth).toMatchObject({
+		symbol: "BTC",
+		bids: [],
+		asks: [],
+	});
+});

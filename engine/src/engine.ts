@@ -33,7 +33,9 @@ export function placeOrder(orderInput: CreateOrderInput) {
 	}
 
 	const averagePrice =
-		order.fills.reduce((total, fill) => total + fill.price * fill.qty, 0) / order.filledQty;
+		order.fills.length > 0
+			? order.fills.reduce((total, fill) => total + fill.price * fill.qty, 0) / order.filledQty
+			: null;
 
 	return {
 		orderId: order.orderId,
@@ -68,8 +70,9 @@ export function cancelOrder(userId: string, orderId: string) {
 	return {
 		orderId: order.orderId,
 		status: order.status,
-		releasedFunds,
+		qty: order.qty,
 		filledQty: order.filledQty,
+		releasedFunds,
 	};
 }
 
