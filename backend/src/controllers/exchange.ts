@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { orderBodySchema, orderIdParamSchema, symbolParamSchema } from "../types/exchange";
 import { sendToEngine } from "../utils/engineClient";
+import { prisma } from "../db";
 
 function getUserId(req: Request): string {
 	if (!req.userId) {
@@ -9,6 +10,7 @@ function getUserId(req: Request): string {
 	return req.userId;
 }
 
+// Orders
 export async function createOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
 	const parsedBody = orderBodySchema.safeParse(req.body);
@@ -40,14 +42,14 @@ export async function createOrder(req: Request, res: Response) {
 
 export async function getOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
-	const parsedBody = orderIdParamSchema.safeParse(req.params);
+	const parsedParams = orderIdParamSchema.safeParse(req.params);
 
-	if (!parsedBody.success) {
-		res.status(401).json({ error: parsedBody.error });
+	if (!parsedParams.success) {
+		res.status(401).json({ error: parsedParams.error });
 		return;
 	}
 
-	const { orderId } = parsedBody.data;
+	const { orderId } = parsedParams.data;
 
 	const engineResponse = await sendToEngine("get_order", { userId, orderId });
 
@@ -59,15 +61,69 @@ export async function getOrder(req: Request, res: Response) {
 	res.status(200).json(engineResponse.data);
 }
 
-export async function getDepth(req: Request, res: Response) {
-	const parsedBody = symbolParamSchema.safeParse(req.params);
+export async function cancelOrder(req: Request, res: Response) {
+	const userId = getUserId(req);
+	const parsedParams = orderIdParamSchema.safeParse(req.params);
 
-	if (!parsedBody.success) {
-		res.status(401).json({ error: parsedBody.error });
+	if (!parsedParams.success) {
+		res.status(401).json({ error: parsedParams.error });
 		return;
 	}
 
-	const { symbol } = parsedBody.data;
+	const { orderId } = parsedParams.data;
+	const engineResponse = await sendToEngine("cancel_order", { userId, orderId });
+
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
+	}
+
+	res.status(200).json(engineResponse.data);
+}
+
+// Markets
+export async function getMarkets(_req: Request, res: Response) {
+	try {
+		const markets = await prisma.market.findMany();
+
+		res.status(200).json({ data: markets });
+	} catch (e) {
+		res.status(401).json({ error: "error fetching markets" });
+	}
+}
+
+export async function getTrades(req: Request, res: Response) {
+	const parsedParams = symbolParamSchema.safeParse(req.params);
+
+	if (!parsedParams.success) {
+		res.status(401).json({ error: parsedParams.error });
+		return;
+	}
+
+	const { symbol } = parsedParams.data;
+
+	try {
+		const trades = await prisma.fill.findMany({
+			where: {
+				symbol,
+			},
+		});
+
+		res.status(200).json({ data: trades });
+	} catch (e) {
+		res.status(401).json({ error: "error fetching trades" });
+	}
+}
+
+export async function getDepth(req: Request, res: Response) {
+	const parsedParams = symbolParamSchema.safeParse(req.params);
+
+	if (!parsedParams.success) {
+		res.status(401).json({ error: parsedParams.error });
+		return;
+	}
+
+	const { symbol } = parsedParams.data;
 
 	const engineResponse = await sendToEngine("get_depth", { symbol });
 
@@ -79,54 +135,11 @@ export async function getDepth(req: Request, res: Response) {
 	res.status(200).json(engineResponse.data);
 }
 
+// Balances
 export async function getBalance(req: Request, res: Response) {
 	const userId = getUserId(req);
 
 	const engineResponse = await sendToEngine("get_user_balance", { userId });
-
-	if (!engineResponse.success) {
-		res.status(400).json({ error: engineResponse.error });
-		return;
-	}
-
-	res.status(200).json(engineResponse.data);
-}
-
-// TODO
-export async function getFills(req: Request, res: Response) {
-	const symbol = req.params.symbol;
-
-	try {
-		const fills = {};
-
-		res.status(200).json({ data: fills });
-	} catch (e) {
-		res.status(401).json({ error: "error fetching fills" });
-	}
-}
-
-// TODO
-export async function getStocks(req: Request, res: Response) {
-	try {
-		const stocks = {};
-
-		res.status(200).json({ data: stocks });
-	} catch (e) {
-		res.status(401).json({ error: "error fetching stocks" });
-	}
-}
-
-export async function cancelOrder(req: Request, res: Response) {
-	const userId = getUserId(req);
-	const parsedBody = orderIdParamSchema.safeParse(req.params);
-
-	if (!parsedBody.success) {
-		res.status(401).json({ error: parsedBody.error });
-		return;
-	}
-
-	const { orderId } = parsedBody.data;
-	const engineResponse = await sendToEngine("cancel_order", { userId, orderId });
 
 	if (!engineResponse.success) {
 		res.status(400).json({ error: engineResponse.error });

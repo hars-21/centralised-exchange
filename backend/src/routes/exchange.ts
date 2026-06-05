@@ -6,17 +6,22 @@ import {
 	createOrder,
 	getBalance,
 	getDepth,
-	getFills,
+	getMarkets,
 	getOrder,
-	getStocks,
+	getTrades,
 } from "../controllers/exchange";
 
 export const exchangeRouter = Router();
 
-exchangeRouter.get("/order/:orderId", requireAuth, asyncHandler(getOrder));
-exchangeRouter.get("/orderbook/:symbol", requireAuth, asyncHandler(getDepth));
-exchangeRouter.get("/fills/:symbol", requireAuth, asyncHandler(getFills));
-exchangeRouter.get("/stocks", requireAuth, asyncHandler(getStocks));
-exchangeRouter.get("/balance", requireAuth, asyncHandler(getBalance));
-exchangeRouter.post("/order", requireAuth, asyncHandler(createOrder));
-exchangeRouter.delete("/order/:orderId", requireAuth, asyncHandler(cancelOrder));
+// Orders
+exchangeRouter.post("/orders", requireAuth, asyncHandler(createOrder));
+exchangeRouter.get("/orders/:orderId", requireAuth, asyncHandler(getOrder));
+exchangeRouter.delete("/orders/:orderId", requireAuth, asyncHandler(cancelOrder));
+
+// Markets
+exchangeRouter.get("/markets", asyncHandler(getMarkets));
+exchangeRouter.get("/markets/:symbol/depth", asyncHandler(getDepth));
+exchangeRouter.get("/markets/:symbol/trades", asyncHandler(getTrades));
+
+// Balances
+exchangeRouter.get("/balances", requireAuth, asyncHandler(getBalance));
