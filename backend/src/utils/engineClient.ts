@@ -1,6 +1,7 @@
 import { createClient } from "redis";
 import type { EngineCommandType, EngineResponse } from "../types/engine";
 import { resolveEngineResponse, waitForEngineResponse } from "../store/pendingResponses";
+import { activeSubscriptions } from "./websocket";
 
 export const QUEUE_ID = crypto.randomUUID();
 
@@ -45,5 +46,18 @@ export async function listenForEngineresponses(): Promise<void> {
 		} catch (e) {
 			console.error("Invalid engine response: ", e);
 		}
+	}
+}
+
+export async function listenForOrderbookDepth() {
+	while (1) {
+		const data = await subscriber.brPop("depth-changes", 1);
+		if (!data) continue;
+
+		const parsedData = JSON.parse(data.element);
+
+		activeSubscriptions[parsedData.stream]?.forEach((ws) => {
+			ws.send(JSON.stringify(parsedData.data));
+		});
 	}
 }

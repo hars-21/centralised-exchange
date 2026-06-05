@@ -2,11 +2,25 @@ import "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { authRouter } from "./routes/auth";
 import { exchangeRouter } from "./routes/exchange";
-import { connectRedis, listenForEngineresponses, pingRedis, QUEUE_ID } from "./utils/engineClient";
+import {
+	connectRedis,
+	listenForEngineresponses,
+	listenForOrderbookDepth,
+	pingRedis,
+	QUEUE_ID,
+} from "./utils/engineClient";
+import { WebSocketServer } from "ws";
+import { subscriptionHandler } from "./utils/websocket";
 
 await connectRedis();
 void listenForEngineresponses();
+void listenForOrderbookDepth();
 const app = express();
+
+const wss = new WebSocketServer({
+	port: 8080,
+});
+subscriptionHandler(wss);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,5 +50,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(3000, () => {
 	console.log("Server running on :3000");
+	console.log("WebSocket server running on :8080");
 	console.log("Response queue: ", QUEUE_ID);
 });
