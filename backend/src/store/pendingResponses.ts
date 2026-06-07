@@ -3,20 +3,34 @@ import type { EngineResponse } from "../types/engine";
 interface PendingResponses {
 	resolve: (response: EngineResponse) => void;
 	reject: (error: Error) => void;
+	timeout: ReturnType<typeof setTimeout>;
 }
 
-let pendingResponses: Record<string, PendingResponses> = {};
+const pendingResponses = new Map<string, PendingResponses>();
 
-export function waitForEngineResponse(correlationId: string): Promise<EngineResponse> {
+export function waitForEngineResponse(
+	correlationId: string,
+	timeoutMs: number,
+): Promise<EngineResponse> {
 	return new Promise((resolve, reject) => {
-		pendingResponses[correlationId] = { resolve, reject };
+		const timeout = setTimeout(() => {
+			pendingResponses.delete(correlationId);
+			reject(new Error("Engine response timed out"));
+		}, timeoutMs);
+
+		pendingResponses.set(correlationId, {
+			resolve,
+			reject,
+			timeout,
+		});
 	});
 }
 
-export function resolveEngineResponse(response: EngineResponse) {
-	const pending = pendingResponses[response.correlationId];
+export function resolveEngineResponse(response: EngineResponse): void {
+	const pending = pendingResponses.get(response.correlationId);
 	if (!pending) return;
 
-	delete pendingResponses[response.correlationId];
+	clearTimeout(pending.timeout);
+	pendingResponses.delete(response.correlationId);
 	pending.resolve(response);
 }

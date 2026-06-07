@@ -27,5 +27,18 @@ export function subscriptionHandler(server: WebSocketServer) {
 				});
 			}
 		});
+
+		socket.on("close", () => {
+			for (const key of Object.keys(activeSubscriptions)) {
+				const sockets = activeSubscriptions[key];
+				if (!sockets) continue;
+
+				activeSubscriptions[key] = sockets.filter((x) => x !== socket);
+
+				if (activeSubscriptions[key].length === 0) {
+					delete activeSubscriptions[key];
+				}
+			}
+		});
 	});
 }

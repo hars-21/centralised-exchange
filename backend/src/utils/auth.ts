@@ -1,14 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
-const SECRET = process.env.JWT_SECRET || "";
+import { env } from "./env";
 
 interface TokenPayload {
 	id: string;
 }
 
-export function createtoken(payload: TokenPayload): string {
-	return jwt.sign(payload, SECRET, { expiresIn: "7d" });
+export function createToken(payload: TokenPayload): string {
+	return jwt.sign(payload, env.jwtSecret, { expiresIn: "7d" });
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -24,7 +23,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 	}
 
 	try {
-		const payload = jwt.verify(token, SECRET) as TokenPayload;
+		const payload = jwt.verify(token, env.jwtSecret) as TokenPayload;
 		req.userId = payload.id;
 		next();
 	} catch (e) {

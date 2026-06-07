@@ -2,13 +2,14 @@ import bcrypt from "bcrypt";
 import { prisma } from "../db";
 import type { Request, Response } from "express";
 import { authSchema } from "../types/auth";
-import { createtoken } from "../utils/auth";
+import { createToken } from "../utils/auth";
+import { sendValidationError } from "../utils/validation";
 
 export async function signup(req: Request, res: Response) {
 	const parsedBody = authSchema.safeParse(req.body);
 
 	if (!parsedBody.success) {
-		res.status(400).json({ error: parsedBody.error });
+		sendValidationError(res, parsedBody.error);
 		return;
 	}
 
@@ -24,7 +25,7 @@ export async function signup(req: Request, res: Response) {
 		});
 
 		res.status(201).json({
-			token: createtoken({ id: user.id }),
+			token: createToken({ id: user.id }),
 			userId: user.id,
 			username: user.username,
 		});
@@ -37,7 +38,7 @@ export async function signin(req: Request, res: Response) {
 	const parsedBody = authSchema.safeParse(req.body);
 
 	if (!parsedBody.success) {
-		res.status(400).json({ error: parsedBody.error });
+		sendValidationError(res, parsedBody.error);
 		return;
 	}
 
@@ -62,7 +63,7 @@ export async function signin(req: Request, res: Response) {
 		}
 
 		res.status(200).json({
-			token: createtoken({ id: user.id }),
+			token: createToken({ id: user.id }),
 			userId: user.id,
 			username: user.username,
 		});

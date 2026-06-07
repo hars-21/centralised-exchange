@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { orderBodySchema, orderIdParamSchema, symbolParamSchema } from "../types/exchange";
 import { sendToEngine } from "../utils/engineClient";
 import { prisma } from "../db";
+import { sendValidationError } from "../utils/validation";
 
 function getUserId(req: Request): string {
 	if (!req.userId) {
@@ -16,7 +17,7 @@ export async function createOrder(req: Request, res: Response) {
 	const parsedBody = orderBodySchema.safeParse(req.body);
 
 	if (!parsedBody.success) {
-		res.status(401).json({ error: parsedBody.error });
+		sendValidationError(res, parsedBody.error);
 		return;
 	}
 
@@ -45,7 +46,7 @@ export async function getOrder(req: Request, res: Response) {
 	const parsedParams = orderIdParamSchema.safeParse(req.params);
 
 	if (!parsedParams.success) {
-		res.status(401).json({ error: parsedParams.error });
+		sendValidationError(res, parsedParams.error);
 		return;
 	}
 
@@ -66,7 +67,7 @@ export async function cancelOrder(req: Request, res: Response) {
 	const parsedParams = orderIdParamSchema.safeParse(req.params);
 
 	if (!parsedParams.success) {
-		res.status(401).json({ error: parsedParams.error });
+		sendValidationError(res, parsedParams.error);
 		return;
 	}
 
@@ -96,7 +97,7 @@ export async function getTrades(req: Request, res: Response) {
 	const parsedParams = symbolParamSchema.safeParse(req.params);
 
 	if (!parsedParams.success) {
-		res.status(401).json({ error: parsedParams.error });
+		sendValidationError(res, parsedParams.error);
 		return;
 	}
 
@@ -119,7 +120,7 @@ export async function getDepth(req: Request, res: Response) {
 	const parsedParams = symbolParamSchema.safeParse(req.params);
 
 	if (!parsedParams.success) {
-		res.status(401).json({ error: parsedParams.error });
+		sendValidationError(res, parsedParams.error);
 		return;
 	}
 

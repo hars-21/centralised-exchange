@@ -1,24 +1,24 @@
 import "dotenv";
 import express, { type NextFunction, type Request, type Response } from "express";
-import { authRouter } from "./routes/auth";
-import { exchangeRouter } from "./routes/exchange";
 import {
 	connectRedis,
 	listenForEngineresponses,
 	listenForOrderbookDepth,
 	pingRedis,
-	QUEUE_ID,
 } from "./utils/engineClient";
 import { WebSocketServer } from "ws";
 import { subscriptionHandler } from "./utils/websocket";
+import { appRouter } from "./routes";
+import { env } from "./utils/env";
 
 await connectRedis();
 void listenForEngineresponses();
 void listenForOrderbookDepth();
+
 const app = express();
 
-const wss = new WebSocketServer({
-	port: 8080,
+const wss = new WebSocketServer({ port: env.websocketPort }, () => {
+	console.log(`WebSocket server running on http://localhost:${env.websocketPort}`);
 });
 subscriptionHandler(wss);
 
@@ -38,8 +38,7 @@ app.get("/health", async (_req: Request, res: Response) => {
 	res.status(200).json({ success: true });
 });
 
-app.use("/", authRouter);
-app.use("/", exchangeRouter);
+app.use("/", appRouter);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 	console.error(err);
@@ -48,8 +47,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 	});
 });
 
-app.listen(3000, () => {
-	console.log("Server running on :3000");
-	console.log("WebSocket server running on :8080");
-	console.log("Response queue: ", QUEUE_ID);
+app.listen(env.port, () => {
+	console.log(`Server running on http://localhost:${env.port}`);
 });
