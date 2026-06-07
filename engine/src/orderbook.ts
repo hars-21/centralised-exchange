@@ -65,8 +65,7 @@ export function removeOrderFromBook(order: OrderRecord) {
 	}
 
 	priceLevel.orders = priceLevel.orders.filter(
-		(restingOrder: RestingOrder) =>
-			restingOrder.orderId !== order.orderId && restingOrder.userId !== order.userId,
+		(restingOrder: RestingOrder) => restingOrder.orderId !== order.orderId,
 	);
 	priceLevel.totalQty -= order.qty - order.filledQty;
 

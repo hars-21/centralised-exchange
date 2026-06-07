@@ -27,4 +27,6 @@ export function resetState() {
 			locked: 0,
 		},
 	};
+
+	ORDERS.length = 0;
 }

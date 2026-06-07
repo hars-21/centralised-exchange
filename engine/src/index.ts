@@ -2,21 +2,22 @@ import { handleEngineRequest } from "./handler";
 import { getDepth } from "./orderbook";
 import { ORDERS } from "./store";
 import type { EngineRequest, EngineResponse } from "./types/engine";
-import { connectRedis, publisher, subscriber } from "./utils/connections";
+import { connectRedis, publisher, subscriber } from "./redis/client";
+import { env } from "./utils/env";
 
 await connectRedis();
-console.log("Engine listening on Redis queue: incoming-order");
+console.log(`Engine listening on Redis queue: ${env.incomingQueue}`);
 
 async function sendResponse(responseQueue: string, response: EngineResponse) {
 	await publisher.lPush(responseQueue, JSON.stringify(response));
 }
 
 async function publishDepth(message: any) {
-	await publisher.lPush("depth-changes", JSON.stringify(message));
+	await publisher.lPush(env.depthQueue, JSON.stringify(message));
 }
 
 while (1) {
-	const item = await subscriber.brPop("incoming-order", 1);
+	const item = await subscriber.brPop(env.incomingQueue, 1);
 	if (!item) continue;
 
 	let message: EngineRequest;

@@ -18,11 +18,7 @@ export function placeOrder(orderInput: CreateOrderInput) {
 
 	ORDERS.push(order);
 
-	if (order.side === "BUY") {
-		matchBuyOrder(order);
-	} else {
-		matchSellOrder(order);
-	}
+	matchOrder(order);
 
 	if (order.fills.length > 0) {
 		settleTrades(order.fills);
@@ -80,29 +76,37 @@ export function cancelOrder(userId: string, orderId: string) {
 	};
 }
 
-function matchBuyOrder(order: OrderRecord) {
+function matchOrder(order: OrderRecord) {
 	let remainingQty = order.qty - order.filledQty;
 
 	while (remainingQty > 0) {
-		const bestAskPrice = getBestAsk(order.symbol);
-		if (bestAskPrice === null) break;
+		const bestPrice = order.side === "BUY" ? getBestAsk(order.symbol) : getBestBid(order.symbol);
+		if (bestPrice === null) break;
 
 		if (order.type === "LIMIT") {
 			if (order.price === null) {
 				throw new Error("LIMIT order must have price");
 			}
 
-			if (bestAskPrice > order.price) {
+			if (
+				(order.side === "BUY" && bestPrice > order.price) ||
+				(order.side === "SELL" && bestPrice < order.price)
+			) {
 				break;
 			}
 		}
 
-		const priceLevel = ORDERBOOK[order.symbol]?.asks[bestAskPrice];
+		const matchSide = order.side === "BUY" ? "asks" : "bids";
+
+		const priceLevel = ORDERBOOK[order.symbol]![matchSide][bestPrice];
 		if (!priceLevel) break;
 
 		while (remainingQty > 0 && priceLevel.orders.length > 0) {
 			const restingOrder = priceLevel.orders[0]!;
 			const availableQty = restingOrder.qty - restingOrder.filledQty;
+
+			const buyOrderId = order.side === "BUY" ? order.orderId : restingOrder.orderId;
+			const sellOrderId = order.side === "BUY" ? restingOrder.orderId : order.orderId;
 
 			if (remainingQty >= availableQty) {
 				remainingQty -= availableQty;
@@ -116,10 +120,10 @@ function matchBuyOrder(order: OrderRecord) {
 				const fill = {
 					fillId: crypto.randomUUID(),
 					symbol: order.symbol,
-					price: bestAskPrice,
+					price: bestPrice,
 					qty: availableQty,
-					buyOrderId: order.orderId,
-					sellOrderId: restingOrder.orderId,
+					buyOrderId,
+					sellOrderId,
 					createdAt: Date.now(),
 				};
 
@@ -140,10 +144,10 @@ function matchBuyOrder(order: OrderRecord) {
 				const fill = {
 					fillId: crypto.randomUUID(),
 					symbol: order.symbol,
-					price: bestAskPrice,
+					price: bestPrice,
 					qty: remainingQty,
-					buyOrderId: order.orderId,
-					sellOrderId: restingOrder.orderId,
+					buyOrderId,
+					sellOrderId,
 					createdAt: Date.now(),
 				};
 
@@ -155,91 +159,7 @@ function matchBuyOrder(order: OrderRecord) {
 		}
 
 		if (priceLevel.orders.length === 0) {
-			delete ORDERBOOK[order.symbol]?.asks[bestAskPrice];
-		}
-	}
-
-	if (remainingQty > 0 && order.type === "LIMIT") {
-		addOrderToBook(order);
-	}
-}
-
-function matchSellOrder(order: OrderRecord) {
-	let remainingQty = order.qty - order.filledQty;
-
-	while (remainingQty > 0) {
-		const bestBidPrice = getBestBid(order.symbol);
-		if (bestBidPrice === null) break;
-
-		if (order.type === "LIMIT") {
-			if (order.price === null) {
-				throw new Error("LIMIT order must have price");
-			}
-
-			if (bestBidPrice < order.price) {
-				break;
-			}
-		}
-
-		const priceLevel = ORDERBOOK[order.symbol]?.bids[bestBidPrice];
-		if (!priceLevel) break;
-
-		while (remainingQty > 0 && priceLevel.orders.length > 0) {
-			const restingOrder = priceLevel.orders[0]!;
-			const availableQty = restingOrder.qty - restingOrder.filledQty;
-
-			if (remainingQty >= availableQty) {
-				remainingQty -= availableQty;
-				restingOrder.filledQty += availableQty;
-
-				order.filledQty += availableQty;
-				order.status = remainingQty === 0 ? "FILLED" : "PARTIALLY_FILLED";
-				restingOrder.status =
-					restingOrder.qty === restingOrder.filledQty ? "FILLED" : "PARTIALLY_FILLED";
-
-				const fill = {
-					fillId: crypto.randomUUID(),
-					symbol: order.symbol,
-					price: bestBidPrice,
-					qty: availableQty,
-					buyOrderId: restingOrder.orderId,
-					sellOrderId: order.orderId,
-					createdAt: Date.now(),
-				};
-
-				order.fills.push(fill);
-				restingOrder.fills.push(fill);
-
-				priceLevel.totalQty -= availableQty;
-				priceLevel.orders.shift();
-			} else {
-				restingOrder.filledQty += remainingQty;
-				priceLevel.totalQty -= remainingQty;
-
-				order.filledQty += remainingQty;
-				order.status = "FILLED";
-				restingOrder.status =
-					restingOrder.qty === restingOrder.filledQty ? "FILLED" : "PARTIALLY_FILLED";
-
-				const fill = {
-					fillId: crypto.randomUUID(),
-					symbol: order.symbol,
-					price: bestBidPrice,
-					qty: remainingQty,
-					buyOrderId: restingOrder.orderId,
-					sellOrderId: order.orderId,
-					createdAt: Date.now(),
-				};
-
-				order.fills.push(fill);
-				restingOrder.fills.push(fill);
-
-				remainingQty = 0;
-			}
-		}
-
-		if (priceLevel.orders.length === 0) {
-			delete ORDERBOOK[order.symbol]?.bids[bestBidPrice];
+			delete ORDERBOOK[order.symbol]![matchSide][bestPrice];
 		}
 	}
 

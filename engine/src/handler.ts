@@ -53,5 +53,7 @@ export function handleEngineRequest(message: EngineRequest) {
 		}
 
 		return cancelOrder(userId, orderId);
+	} else {
+		throw new Error("Unknown message type");
 	}
 }

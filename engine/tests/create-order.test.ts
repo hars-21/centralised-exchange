@@ -363,7 +363,7 @@ test("market order with empty book", () => {
 	}).toThrow("No liquidity");
 });
 
-test("market buy order partially filled", () => {
+test("market buy order consumes first seller at price level", () => {
 	const firstOrder = placeOrder({
 		userId: "1",
 		side: "SELL",
