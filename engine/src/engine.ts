@@ -1,5 +1,11 @@
 import { lockBalance, releaseBalance, settleTrades } from "./balance";
-import { addOrderToBook, getBestAsk, getBestBid, removeOrderFromBook } from "./orderbook";
+import {
+	addOrderToBook,
+	getBestAsk,
+	getBestBid,
+	recordChanges,
+	removeOrderFromBook,
+} from "./orderbook";
 import { ORDERBOOK, ORDERS } from "./store";
 import type { CreateOrderInput, OrderRecord } from "./types/store";
 
@@ -132,6 +138,7 @@ function matchOrder(order: OrderRecord) {
 
 				priceLevel.totalQty -= availableQty;
 				priceLevel.orders.shift();
+				recordChanges(order.symbol, bestPrice, priceLevel, matchSide);
 			} else {
 				restingOrder.filledQty += remainingQty;
 				priceLevel.totalQty -= remainingQty;
@@ -155,6 +162,7 @@ function matchOrder(order: OrderRecord) {
 				restingOrder.fills.push(fill);
 
 				remainingQty = 0;
+				recordChanges(order.symbol, bestPrice, priceLevel, matchSide);
 			}
 		}
 

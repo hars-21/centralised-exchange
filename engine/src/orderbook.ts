@@ -1,5 +1,6 @@
+import { publishDepth } from "../src/redis/publish";
 import { ORDERBOOK } from "./store";
-import type { OrderRecord, PriceLevel, RestingOrder } from "./types/store";
+import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/store";
 
 export function getBestBid(symbol: string) {
 	const bids = ORDERBOOK[symbol]!.bids;
@@ -31,17 +32,20 @@ export function addOrderToBook(order: OrderRecord) {
 	}
 
 	const orderSide = order.side === "BUY" ? "bids" : "asks";
-	let priceLevel = ORDERBOOK[order.symbol]![orderSide][order.price];
+	const priceLevel = ORDERBOOK[order.symbol]![orderSide][order.price];
+	const remainingQty = order.qty - order.filledQty;
 
 	if (priceLevel) {
 		priceLevel.orders.push(order as RestingOrder);
-		priceLevel.totalQty += order.qty - order.filledQty;
+		priceLevel.totalQty += remainingQty;
 	} else {
 		ORDERBOOK[order.symbol]![orderSide][order.price] = {
-			totalQty: order.qty - order.filledQty,
+			totalQty: remainingQty,
 			orders: [order as RestingOrder],
 		};
 	}
+	const updatedPriceLevel = ORDERBOOK[order.symbol]![orderSide][order.price]!;
+	recordChanges(order.symbol, order.price, updatedPriceLevel, orderSide);
 }
 
 export function removeOrderFromBook(order: OrderRecord) {
@@ -58,7 +62,7 @@ export function removeOrderFromBook(order: OrderRecord) {
 	}
 
 	const orderSide = order.side === "BUY" ? "bids" : "asks";
-	let priceLevel = ORDERBOOK[order.symbol]![orderSide][order.price];
+	const priceLevel = ORDERBOOK[order.symbol]![orderSide][order.price];
 
 	if (!priceLevel) {
 		throw new Error("Invalid price");
@@ -70,6 +74,8 @@ export function removeOrderFromBook(order: OrderRecord) {
 	priceLevel.totalQty -= order.qty - order.filledQty;
 
 	ORDERBOOK[order.symbol]![orderSide][order.price] = priceLevel;
+
+	recordChanges(order.symbol, order.price, priceLevel, orderSide);
 
 	if (priceLevel.orders.length === 0) {
 		delete ORDERBOOK[order.symbol]![orderSide][order.price];
@@ -104,4 +110,24 @@ export function getDepth(symbol: string) {
 		bids: bidsArr,
 		asks: asksArr,
 	};
+}
+
+export function recordChanges(
+	symbol: string,
+	price: number,
+	pricelevel: PriceLevel,
+	side: "bids" | "asks",
+) {
+	const qty = pricelevel.totalQty;
+	const depth: Depth = {
+		symbol,
+		bids: [],
+		asks: [],
+	};
+
+	depth[side].push({ price, qty });
+
+	void publishDepth(depth).catch((err) => {
+		console.error("Failed to publish depth", err);
+	});
 }

@@ -64,8 +64,8 @@ export async function listenForOrderbookDepth(): Promise<void> {
 		try {
 			const parsedData = JSON.parse(data.element);
 
-			activeSubscriptions[parsedData.stream]?.forEach((ws) => {
-				ws.send(JSON.stringify(parsedData.data));
+			activeSubscriptions[parsedData.symbol]?.forEach((ws) => {
+				ws.send(JSON.stringify(parsedData));
 			});
 		} catch (err) {
 			console.error("Invalid engine response: ", err);
