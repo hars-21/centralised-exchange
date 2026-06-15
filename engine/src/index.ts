@@ -3,38 +3,54 @@ import type { EngineRequest, EngineResponse } from "./types/engine";
 import { connectRedis, publisher, subscriber } from "./redis/client";
 import { env } from "./utils/env";
 
+let lastID = "0-0";
+
 await connectRedis();
-console.log(`Engine listening on Redis queue: ${env.incomingQueue}`);
+console.log(`Engine listening on Redis queue: ${env.incomingStream}`);
 
 async function sendResponse(responseQueue: string, response: EngineResponse) {
 	await publisher.lPush(responseQueue, JSON.stringify(response));
 }
 
 while (1) {
-	const item = await subscriber.brPop(env.incomingQueue, 1);
-	if (!item) continue;
+	const items = await subscriber.xRead({
+		key: env.incomingStream,
+		id: lastID,
+	});
 
-	let message: EngineRequest;
+	if (!items) continue;
 
-	try {
-		message = JSON.parse(item.element);
-	} catch (err) {
-		console.error("Skipping invalid broker message");
-		continue;
-	}
+	for (const message of items[0]?.messages) {
+		lastID = message.id;
+		const msg = message.message;
 
-	try {
-		const data = handleEngineRequest(message);
-		await sendResponse(message.responseQueue, {
-			correlationId: message.correlationId,
-			success: true,
-			data,
-		});
-	} catch (error) {
-		await sendResponse(message.responseQueue, {
-			correlationId: message.correlationId,
-			success: false,
-			error: error instanceof Error ? error.message : "engine_error",
-		});
+		let request: EngineRequest;
+
+		try {
+			request = {
+				correlationId: msg.correlationId,
+				responseQueue: msg.responseQueue,
+				type: msg.type,
+				payload: JSON.parse(msg.payload),
+			};
+		} catch (err) {
+			console.error("Skipping invalid broker message");
+			continue;
+		}
+
+		try {
+			const data = handleEngineRequest(request);
+			await sendResponse(request.responseQueue, {
+				correlationId: request.correlationId,
+				success: true,
+				data,
+			});
+		} catch (error) {
+			await sendResponse(request.responseQueue, {
+				correlationId: request.correlationId,
+				success: false,
+				error: error instanceof Error ? error.message : "engine_error",
+			});
+		}
 	}
 }

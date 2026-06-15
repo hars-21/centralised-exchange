@@ -2,6 +2,8 @@ import { publishDepth } from "../src/redis/publish";
 import { ORDERBOOK } from "./store";
 import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/store";
 
+let LastUpdateID = 1;
+
 export function getBestBid(symbol: string) {
 	const bids = ORDERBOOK[symbol]!.bids;
 	const bidPrices = Object.keys(bids).map(Number);
@@ -127,7 +129,7 @@ export function recordChanges(
 
 	depth[side].push({ price, qty });
 
-	void publishDepth(depth).catch((err) => {
+	void publishDepth(depth, LastUpdateID++).catch((err) => {
 		console.error("Failed to publish depth", err);
 	});
 }

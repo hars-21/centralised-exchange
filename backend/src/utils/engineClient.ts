@@ -27,14 +27,13 @@ export async function sendToEngine(
 	const correlationId = crypto.randomUUID();
 	const responsePromise = waitForEngineResponse(correlationId, env.engineTimeoutMs);
 
-	const message = {
+	await publisher.xAdd(env.incomingStream, "*", {
 		correlationId,
 		responseQueue: env.responseQueue,
 		type,
-		payload,
-	};
+		payload: JSON.stringify(payload),
+	});
 
-	await publisher.lPush(env.incomingQueue, JSON.stringify(message));
 	return responsePromise;
 }
 
@@ -55,20 +54,17 @@ export async function listenForEngineresponses(): Promise<void> {
 }
 
 export async function listenForOrderbookDepth(): Promise<void> {
-	console.log(`Listening for market data on ${env.depthQueue}`);
-
-	while (1) {
-		const data = await subscriber.brPop(env.depthQueue, 1);
-		if (!data) continue;
+	await subscriber.pSubscribe("depth:*", (message, channel) => {
+		console.log(channel, message);
 
 		try {
-			const parsedData = JSON.parse(data.element);
+			const parsedData = JSON.parse(message);
 
-			activeSubscriptions[parsedData.symbol]?.forEach((ws) => {
+			activeSubscriptions[channel]?.forEach((ws) => {
 				ws.send(JSON.stringify(parsedData));
 			});
 		} catch (err) {
-			console.error("Invalid engine response: ", err);
+			console.error("Invalid depth message:", err);
 		}
-	}
+	});
 }

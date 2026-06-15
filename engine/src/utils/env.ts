@@ -8,6 +8,5 @@ function readRequiredEnv(name: string): string {
 
 export const env = {
 	redisUrl: readRequiredEnv("REDIS_URL"),
-	incomingQueue: process.env.INCOMING_QUEUE ?? "backend-to-engine-broker",
-	depthQueue: process.env.DEPTH_QUEUE ?? "depth-changes",
+	incomingStream: process.env.INCOMING_STREAM ?? "backend-to-engine-broker",
 };

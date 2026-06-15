@@ -12,8 +12,7 @@ export const env = {
 	redisUrl: readRequiredEnv("REDIS_URL"),
 	databaseUrl: readRequiredEnv("DATABASE_URL"),
 	jwtSecret: readRequiredEnv("JWT_SECRET"),
-	incomingQueue: process.env.INCOMING_QUEUE ?? "backend-to-engine-broker",
+	incomingStream: process.env.INCOMING_STREAM ?? "backend-to-engine-broker",
 	responseQueue: `response-queue-${process.env.BACKEND_QUEUE_ID ?? crypto.randomUUID()}`,
-	depthQueue: process.env.DEPTH_QUEUE ?? "depth-changes",
 	engineTimeoutMs: Number(process.env.ENGINE_TIMEOUT_MS ?? 30000),
 };

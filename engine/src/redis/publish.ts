@@ -1,10 +1,16 @@
 import { publisher } from "./client";
-import { env } from "../utils/env";
 import type { Depth } from "../types/store";
 
-export async function publishDepth(message: Depth) {
+export async function publishDepth(message: Depth, lastUpdateId: number) {
 	if (!publisher.isOpen) {
 		return;
 	}
-	await publisher.lPush(env.depthQueue, JSON.stringify(message));
+
+	await publisher.publish(
+		`depth:${message.symbol}`,
+		JSON.stringify({
+			lastUpdateId,
+			...message,
+		}),
+	);
 }
