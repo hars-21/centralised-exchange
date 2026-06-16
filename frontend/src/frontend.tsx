@@ -3,12 +3,16 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 
+import { ThemeProvider } from "./lib/theme-provider";
+
 const elem = document.getElementById("root")!;
 const app = (
 	<StrictMode>
-		<BrowserRouter>
-			<App />
-		</BrowserRouter>
+		<ThemeProvider>
+			<BrowserRouter>
+				<App />
+			</BrowserRouter>
+		</ThemeProvider>
 	</StrictMode>
 );
 

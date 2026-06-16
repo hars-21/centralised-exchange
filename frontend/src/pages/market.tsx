@@ -10,25 +10,32 @@ export function MarketPage() {
 
 	return (
 		<AppLayout>
-			<MarketHeader market={marketId} />
-			<div className="flex flex-1 flex-col lg:flex-row" style={{ height: "calc(100vh - 84px)" }}>
-				<div className="flex flex-1 flex-col border-r lg:max-w-70">
-					<Orderbook />
-				</div>
+			<div className="flex flex-col h-[calc(100vh-48px)] p-4 gap-4 bg-background/40 overflow-hidden">
+				<MarketHeader market={marketId} />
 
-				<div className="flex flex-1 flex-col">
-					<div className="flex-1 border-b">
-						<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-							Chart — coming soon
+				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
+					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
+						<Orderbook />
+					</div>
+
+					<div className="flex flex-1 flex-col gap-4 h-full min-w-0">
+						<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs flex items-center justify-center min-h-50">
+							<div className="text-center p-6">
+								<p className="text-sm font-medium">Chart Visualization</p>
+								<p className="text-xs text-muted-foreground mt-1">
+									Replay and strategy analytics coming soon
+								</p>
+							</div>
+						</div>
+
+						<div className="bg-card rounded-xl border border-border/40 shadow-xs overflow-hidden h-55 shrink-0">
+							<OpenOrders />
 						</div>
 					</div>
-					<div className="border-t">
-						<OpenOrders />
-					</div>
-				</div>
 
-				<div className="border-l lg:w-70">
-					<TradeForm />
+					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
+						<TradeForm />
+					</div>
 				</div>
 			</div>
 		</AppLayout>
