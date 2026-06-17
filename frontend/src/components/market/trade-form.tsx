@@ -88,7 +88,9 @@ export function TradeForm({ marketId }: { marketId: string }) {
 							<div className="flex justify-between items-center text-xs">
 								<span className="text-muted-foreground">Available Balance</span>
 								<span className="font-mono text-foreground font-semibold">
-									{user?.balance.INR?.available} {side === "BUY" ? "USD" : "BTC"}
+									{side === "BUY"
+										? `${user?.balance.INR?.available ?? 0} USD`
+										: `${user?.balance[marketId]?.available ?? 0} ${marketId}`}
 								</span>
 							</div>
 

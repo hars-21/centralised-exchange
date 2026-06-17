@@ -1,4 +1,3 @@
-import type { DepthLevel } from "@/types";
 import { Info } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 
@@ -7,8 +6,8 @@ export function Orderbook({
 	asks,
 	loading,
 }: {
-	bids: DepthLevel[];
-	asks: DepthLevel[];
+	bids: Record<number, number>;
+	asks: Record<number, number>;
 	loading?: boolean;
 }) {
 	if (loading) {
@@ -58,6 +57,26 @@ export function Orderbook({
 	const showMockAsks = asks === undefined;
 	const showMockBids = bids === undefined;
 
+	let totalBid = 0;
+	let totalAsk = 0;
+
+	const sortedAsks = !showMockAsks
+		? Object.entries(asks)
+				.map(([price, qty]) => ({ price: Number(price), qty }))
+				.sort((a, b) => a.price - b.price)
+		: [];
+
+	const sortedBids = !showMockBids
+		? Object.entries(bids)
+				.map(([price, qty]) => ({ price: Number(price), qty }))
+				.sort((a, b) => b.price - a.price)
+		: [];
+
+	const bestAsk = sortedAsks.length > 0 ? sortedAsks[0]?.price : 0;
+	const bestBid = sortedBids.length > 0 ? sortedBids[0]?.price : 0;
+	const spread = bestAsk && bestBid ? bestAsk - bestBid : 0;
+	const midPrice = bestAsk && bestBid ? (bestAsk + bestBid) / 2 : 0;
+
 	return (
 		<div className="flex h-full flex-col select-none">
 			<div className="flex items-center justify-between border-b border-border/40 px-4 py-3 bg-muted/15">
@@ -80,7 +99,7 @@ export function Orderbook({
 			</div>
 
 			<div className="flex flex-1 flex-col justify-between min-h-0 py-1.5">
-				<div className="flex flex-col justify-end flex-1 min-h-0">
+				<div className="flex flex-col-reverse justify-start flex-1 min-h-0">
 					{showMockAsks
 						? Array.from({ length: 6 }).map((_, i) => (
 								<div key={`ask-mock-${i}`} className="flex py-1.5 px-4 text-xs font-mono">
@@ -89,27 +108,31 @@ export function Orderbook({
 									<span className="flex-1 text-right text-muted-foreground/30">—</span>
 								</div>
 							))
-						: Array.from(asks).map((ask, i) => (
-								<div
-									key={`ask-${i}`}
-									className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
-								>
-									<span className="flex-1 text-destructive/80 font-medium">{ask.price}</span>
-									<span className="flex-1 text-right text-muted-foreground/80">{ask.qty}</span>
-									<span className="flex-1 text-right text-muted-foreground/40">—</span>
-								</div>
-							))}
+						: sortedAsks.map(({ price, qty }, i) => {
+								totalAsk += qty;
+
+								return (
+									<div
+										key={`ask-${i}`}
+										className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
+									>
+										<span className="flex-1 text-destructive/80 font-medium">{price}</span>
+										<span className="flex-1 text-right text-muted-foreground/80">{qty}</span>
+										<span className="flex-1 text-right text-muted-foreground/40">{totalAsk}</span>
+									</div>
+								);
+							})}
 				</div>
 
 				<div className="border-y border-border/40 bg-muted/10 px-4 py-2 flex items-center justify-between">
 					<div className="flex items-center gap-1.5">
 						<span className="font-mono text-sm font-semibold tracking-tight text-foreground">
-							—
+							{midPrice ?? "—"}
 						</span>
 						<span className="text-[10px] text-muted-foreground font-medium uppercase">USD</span>
 					</div>
 					<div className="text-[10px] text-muted-foreground font-medium">
-						Spread: <span className="font-mono">—</span>
+						Spread: <span className="font-mono">{spread ?? "—"}</span>
 					</div>
 				</div>
 
@@ -122,16 +145,20 @@ export function Orderbook({
 									<span className="flex-1 text-right text-muted-foreground/30">—</span>
 								</div>
 							))
-						: Array.from(bids).map((bid, i) => (
-								<div
-									key={`bid-${i}`}
-									className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
-								>
-									<span className="flex-1 text-success/80 font-medium">{bid.price}</span>
-									<span className="flex-1 text-right text-muted-foreground/80">{bid.qty}</span>
-									<span className="flex-1 text-right text-muted-foreground/40">—</span>
-								</div>
-							))}
+						: sortedBids.map(({ price, qty }, i) => {
+								totalBid += qty;
+
+								return (
+									<div
+										key={`bid-${i}`}
+										className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
+									>
+										<span className="flex-1 text-success/80 font-medium">{price}</span>
+										<span className="flex-1 text-right text-muted-foreground/80">{qty}</span>
+										<span className="flex-1 text-right text-muted-foreground/40">{totalBid}</span>
+									</div>
+								);
+							})}
 				</div>
 			</div>
 		</div>

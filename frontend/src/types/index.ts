@@ -17,3 +17,14 @@ export interface Balance {
 export interface UserBalance {
 	[asset: string]: Balance;
 }
+
+export interface StreamResponse {
+	bids: DepthLevel[];
+	asks: DepthLevel[];
+	lastUpdateId: number;
+}
+
+export type OrderBook = {
+	bids: Record<number, number>;
+	asks: Record<number, number>;
+};

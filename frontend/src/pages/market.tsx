@@ -8,23 +8,59 @@ import { Button } from "../components/ui/button";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "../components/ui/skeleton";
+import type { DepthLevel, OrderBook, StreamResponse } from "@/types";
 
 export function MarketPage() {
 	const { marketId = "BTC" } = useParams();
 	const { user, loading: authLoading } = useAuth();
-	const [bids, setBids] = useState([]);
-	const [asks, setAsks] = useState([]);
 	const [loading, setLoading] = useState(true);
 
+	const [orderbook, setOrderbook] = useState<OrderBook>({
+		bids: {},
+		asks: {},
+	});
+	const buffer: StreamResponse[] = [];
+
 	useEffect(() => {
-		const getDepth = async () => {
+		const streamDepth = async () => {
 			try {
-				const res = await fetch(`http://localhost:8000/markets/${marketId}/depth`);
+				let orderbookInitialized = false;
+				const ws = new WebSocket("ws://localhost:8080");
+				ws.onmessage = (msg) => {
+					const parsedMessage = JSON.parse(msg.data);
 
-				const data = await res.json();
+					const { lastUpdateId, bids, asks } = parsedMessage;
 
-				setBids(data.bids);
-				setAsks(data.asks);
+					if (!orderbookInitialized) {
+						buffer.push({ bids, asks, lastUpdateId });
+					} else {
+						updateOrderbook(bids, asks);
+					}
+				};
+
+				ws.onopen = async () => {
+					try {
+						ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`depth:${marketId}`] }));
+
+						const res = await fetch(`http://localhost:8000/markets/${marketId}/depth`);
+						const { lastUpdateId, bids, asks } = await res.json();
+
+						initializeOrderbook(bids, asks);
+						orderbookInitialized = true;
+
+						buffer.forEach((msg) => {
+							if (msg.lastUpdateId < lastUpdateId) {
+								updateOrderbook(msg.bids, msg.asks);
+							}
+						});
+					} catch (e) {
+						console.error(e);
+					}
+				};
+
+				ws.onclose = () => {
+					ws.send(JSON.stringify({ method: "UNSUBSCRIBE", params: [`depth:${marketId}`] }));
+				};
 			} catch (e) {
 				console.error(e);
 			} finally {
@@ -32,8 +68,54 @@ export function MarketPage() {
 			}
 		};
 
-		getDepth();
+		streamDepth();
 	}, []);
+
+	const initializeOrderbook = (bids: DepthLevel[], asks: DepthLevel[]) => {
+		const bidsMap: Record<number, number> = {};
+		const asksMap: Record<number, number> = {};
+
+		bids.forEach(({ price, qty }) => {
+			bidsMap[price] = qty;
+		});
+
+		asks.forEach(({ price, qty }) => {
+			asksMap[price] = qty;
+		});
+
+		setOrderbook({
+			bids: bidsMap,
+			asks: asksMap,
+		});
+	};
+
+	const updateOrderbook = (updatedBids: DepthLevel[], updatedAsks: DepthLevel[]) => {
+		setOrderbook((prev) => {
+			const bids = { ...prev.bids };
+			const asks = { ...prev.asks };
+
+			updatedBids.forEach(({ price, qty }) => {
+				if (qty === 0) {
+					delete bids[price];
+				} else {
+					bids[price] = qty;
+				}
+			});
+
+			updatedAsks.forEach(({ price, qty }) => {
+				if (qty === 0) {
+					delete asks[price];
+				} else {
+					asks[price] = qty;
+				}
+			});
+
+			return {
+				bids,
+				asks,
+			};
+		});
+	};
 
 	const isDataLoading = loading || authLoading;
 
@@ -44,7 +126,7 @@ export function MarketPage() {
 
 				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
-						<Orderbook bids={bids} asks={asks} loading={isDataLoading} />
+						<Orderbook bids={orderbook.bids} asks={orderbook.asks} loading={isDataLoading} />
 					</div>
 
 					<div className="flex flex-1 flex-col gap-4 h-full min-w-0">
