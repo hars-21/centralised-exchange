@@ -40,9 +40,9 @@ export async function sendToEngine(
 export async function listenForEngineresponses(): Promise<void> {
 	console.log(`Listening for engine responses on ${env.responseQueue}`);
 
-	while (1) {
-		const response = await subscriber.brPop(env.responseQueue, 1);
-		if (!response) continue;
+	for (;;) {
+		const response = await subscriber.brPop(env.responseQueue, 0);
+		if (!response?.element) continue;
 
 		try {
 			const parsedResponse = JSON.parse(response.element);
