@@ -4,21 +4,21 @@ import type { Market, OrderRecord, UserBalance } from "./types/store";
 /*
 	BALANCES = {
 		user1: {
-			INR: {
+			USD: {
 				available: 0,
 				locked: 0,
 			},
-			SOL: {
+			SOL_USD: {
 				available: 0,
 				locked: 0,
 			},
 		},
 		user2: {
-			INR: {
+			USD: {
 				available: 0,
 				locked: 0,
 			},
-			SOL: {
+			SOL_USD: {
 				available: 0,
 				locked: 0,
 			},
@@ -29,7 +29,7 @@ export const BALANCES: Record<string, UserBalance> = {};
 
 /*
 	ORDERBOOK = {
-		SOL: {
+		SOL_USD: {
 			bids: {
 				299: {
 					totalQty: 10,
@@ -62,9 +62,9 @@ export const BALANCES: Record<string, UserBalance> = {};
 	};
 */
 export const ORDERBOOK: Record<string, Market> = {
-	BTC: { bids: {}, asks: {} },
-	SOL: { bids: {}, asks: {} },
-	ETH: { bids: {}, asks: {} },
+	BTC_USD: { bids: {}, asks: {} },
+	SOL_USD: { bids: {}, asks: {} },
+	ETH_USD: { bids: {}, asks: {} },
 };
 
 /*
@@ -73,7 +73,7 @@ export const ORDERBOOK: Record<string, Market> = {
 			userId: "796f7997-a68b-4631-bc1b-2b391a4d44c2",
 			type: "LIMIT",
 			side: "BUY",
-			symbol: "SOL",
+			symbol: "SOL_USD",
 			price: 50,
 			qty: 2,
 			orderId: "81dbd809-d762-4d34-9a86-2fdd635f917a",

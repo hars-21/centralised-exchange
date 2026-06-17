@@ -55,8 +55,6 @@ export async function listenForEngineresponses(): Promise<void> {
 
 export async function listenForOrderbookDepth(): Promise<void> {
 	await subscriber.pSubscribe("depth:*", (message, channel) => {
-		console.log(channel, message);
-
 		try {
 			const parsedData = JSON.parse(message);
 

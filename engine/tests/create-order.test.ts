@@ -12,7 +12,7 @@ test("limit buy order does not match", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 200,
 		qty: 5,
 	});
@@ -21,12 +21,12 @@ test("limit buy order does not match", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(result).toMatchObject({
 		status: "OPEN",
@@ -36,7 +36,7 @@ test("limit buy order does not match", () => {
 	});
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [
 			{
 				price: 100,
@@ -57,7 +57,7 @@ test("limit buy order matches best ask", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -66,7 +66,7 @@ test("limit buy order matches best ask", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -83,7 +83,7 @@ test("limit buy order has better price than best ask", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -92,7 +92,7 @@ test("limit buy order has better price than best ask", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 200,
 		qty: 5,
 	});
@@ -109,7 +109,7 @@ test("limit sell order does not match", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -118,7 +118,7 @@ test("limit sell order does not match", () => {
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 200,
 		qty: 5,
 	});
@@ -136,7 +136,7 @@ test("limit sell order has better price than best bid", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 200,
 		qty: 5,
 	});
@@ -145,7 +145,7 @@ test("limit sell order has better price than best bid", () => {
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -162,7 +162,7 @@ test("partial fill for limit order", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 3,
 	});
@@ -171,12 +171,12 @@ test("partial fill for limit order", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 10,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(result).toMatchObject({
 		status: "PARTIALLY_FILLED",
@@ -185,7 +185,7 @@ test("partial fill for limit order", () => {
 	});
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [
 			{
 				price: 100,
@@ -201,7 +201,7 @@ test("match multiple price levels", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 2,
 	});
@@ -209,7 +209,7 @@ test("match multiple price levels", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 110,
 		qty: 3,
 	});
@@ -217,7 +217,7 @@ test("match multiple price levels", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 120,
 		qty: 5,
 	});
@@ -226,7 +226,7 @@ test("match multiple price levels", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 120,
 		qty: 10,
 	});
@@ -243,7 +243,7 @@ test("limit buy orders should not cross above allowed price", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 2,
 	});
@@ -251,7 +251,7 @@ test("limit buy orders should not cross above allowed price", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 110,
 		qty: 3,
 	});
@@ -259,7 +259,7 @@ test("limit buy orders should not cross above allowed price", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 130,
 		qty: 5,
 	});
@@ -268,12 +268,12 @@ test("limit buy orders should not cross above allowed price", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 110,
 		qty: 10,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(result).toMatchObject({
 		status: "PARTIALLY_FILLED",
@@ -282,7 +282,7 @@ test("limit buy orders should not cross above allowed price", () => {
 	});
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [
 			{
 				price: 110,
@@ -303,7 +303,7 @@ test("market buy order fully filled", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -312,7 +312,7 @@ test("market buy order fully filled", () => {
 		userId: "2",
 		side: "BUY",
 		type: "MARKET",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: null,
 		qty: 5,
 	});
@@ -329,7 +329,7 @@ test("market buy order partially filled", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 2,
 	});
@@ -338,7 +338,7 @@ test("market buy order partially filled", () => {
 		userId: "2",
 		side: "BUY",
 		type: "MARKET",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: null,
 		qty: 5,
 	});
@@ -356,7 +356,7 @@ test("market order with empty book", () => {
 			userId: "2",
 			side: "BUY",
 			type: "MARKET",
-			symbol: "BTC",
+			symbol: "BTC_USD",
 			price: null,
 			qty: 5,
 		});
@@ -368,7 +368,7 @@ test("market buy order consumes first seller at price level", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -376,7 +376,7 @@ test("market buy order consumes first seller at price level", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -385,7 +385,7 @@ test("market buy order consumes first seller at price level", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});

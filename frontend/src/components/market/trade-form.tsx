@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "../ui/skeleton";
 
-export function TradeForm({ marketId }: { marketId: string }) {
+export function TradeForm({ symbol }: { symbol: string }) {
 	const [side, setSide] = useState<"BUY" | "SELL">("BUY");
 	const [orderType, setOrderType] = useState<"LIMIT" | "MARKET">("LIMIT");
 	const [price, setPrice] = useState("");
@@ -43,8 +43,8 @@ export function TradeForm({ marketId }: { marketId: string }) {
 				body: JSON.stringify({
 					side,
 					type: orderType,
-					symbol: marketId,
-					price: Number(price),
+					symbol,
+					price: price ? Number(price) : null,
 					qty: Number(quantity),
 				}),
 			});
@@ -89,8 +89,8 @@ export function TradeForm({ marketId }: { marketId: string }) {
 								<span className="text-muted-foreground">Available Balance</span>
 								<span className="font-mono text-foreground font-semibold">
 									{side === "BUY"
-										? `${user?.balance.INR?.available ?? 0} USD`
-										: `${user?.balance[marketId]?.available ?? 0} ${marketId}`}
+										? `${user?.balance.USD?.available ?? 0} USD`
+										: `${user?.balance[symbol]?.available ?? 0} ${symbol}`}
 								</span>
 							</div>
 

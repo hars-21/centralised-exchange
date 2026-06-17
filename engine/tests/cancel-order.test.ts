@@ -12,7 +12,7 @@ test("cancel open limit order", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 10,
 	});
@@ -25,8 +25,8 @@ test("cancel open limit order", () => {
 		releasedFunds: 1000,
 	});
 
-	expect(getDepth("BTC")).toMatchObject({
-		symbol: "BTC",
+	expect(getDepth("BTC_USD")).toMatchObject({
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [],
 	});
@@ -37,7 +37,7 @@ test("cancel partially filled order", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 10,
 	});
@@ -46,7 +46,7 @@ test("cancel partially filled order", () => {
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 4,
 	});
@@ -59,8 +59,8 @@ test("cancel partially filled order", () => {
 		releasedFunds: 600,
 	});
 
-	expect(getDepth("BTC")).toMatchObject({
-		symbol: "BTC",
+	expect(getDepth("BTC_USD")).toMatchObject({
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [],
 	});
@@ -71,7 +71,7 @@ test("cancel filled order", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -80,7 +80,7 @@ test("cancel filled order", () => {
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -95,7 +95,7 @@ test("cancel already cancelled order", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -118,7 +118,7 @@ test("user tries to cancel another user's order", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});

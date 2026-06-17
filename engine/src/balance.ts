@@ -2,146 +2,127 @@ import { getBestAsk, getBestBid } from "./orderbook";
 import { BALANCES, ORDERS } from "./store";
 import type { CreateOrderInput, OrderRecord, Fill, UserBalance } from "./types/store";
 
+function ensureAsset(userId: string, asset: string) {
+	if (!BALANCES[userId]) {
+		BALANCES[userId] = {};
+	}
+
+	if (!BALANCES[userId][asset]) {
+		BALANCES[userId][asset] = { available: 0, locked: 0 };
+	}
+
+	return BALANCES[userId][asset]!;
+}
+
 export function getUserBalance(userId: string): UserBalance {
 	if (!BALANCES[userId]) {
 		BALANCES[userId] = {
-			INR: {
-				available: 10000,
-				locked: 0,
-			},
-			BTC: {
-				available: 100,
-				locked: 0,
-			},
+			USD: { available: 10000, locked: 0 },
+			BTC: { available: 10, locked: 0 },
 		};
 	}
-
 	return BALANCES[userId];
 }
 
 export function lockBalance(order: CreateOrderInput): number {
 	const { userId, side, type, symbol, price, qty } = order;
+	const baseAsset = symbol.split("_")[0]!;
 
-	if (!BALANCES[userId]) {
-		BALANCES[userId] = {
-			INR: { available: 0, locked: 0 },
-		};
-	}
-
-	if (!BALANCES[userId][symbol]) {
-		BALANCES[userId][symbol] = {
-			available: 0,
-			locked: 0,
-		};
-	}
+	const usd = ensureAsset(userId, "USD");
+	const base = ensureAsset(userId, baseAsset);
 
 	if (side === "BUY") {
-		const currencyBalance = BALANCES[userId].INR!;
-
-		let lockAmount = 0;
+		let lockAmount: number;
 
 		if (type === "LIMIT") {
-			if (price == null) {
-				throw new Error("LIMIT order must have price");
-			}
-
+			if (price == null) throw new Error("LIMIT order must have price");
 			lockAmount = price * qty;
 		} else {
 			const bestAsk = getBestAsk(symbol);
-
-			if (bestAsk == null) {
-				throw new Error("No liquidity");
-			}
-
+			if (bestAsk == null) throw new Error("No liquidity");
 			lockAmount = bestAsk * qty * 1.1;
 		}
 
-		if (currencyBalance.available < lockAmount) {
+		if (usd.available < lockAmount) {
 			throw new Error("Insufficient balance");
 		}
 
-		currencyBalance.available -= lockAmount;
-		currencyBalance.locked += lockAmount;
+		usd.available -= lockAmount;
+		usd.locked += lockAmount;
 
 		return lockAmount;
 	} else {
-		const stockBalance = BALANCES[userId][symbol]!;
-
 		if (type === "MARKET" && getBestBid(symbol) == null) {
 			throw new Error("No liquidity");
 		}
 
-		if (stockBalance.available < qty) {
+		if (base.available < qty) {
 			throw new Error("Insufficient balance");
 		}
 
-		stockBalance.available -= qty;
-		stockBalance.locked += qty;
+		base.available -= qty;
+		base.locked += qty;
 
 		return qty;
 	}
 }
 
 export function settleTrades(fills: Fill[]) {
-	fills.forEach((fill) => {
+	for (const fill of fills) {
 		const { buyOrderId, sellOrderId, qty, price } = fill;
 
-		const buyOrder = ORDERS.find((order) => order.orderId === buyOrderId);
-		const sellOrder = ORDERS.find((order) => order.orderId === sellOrderId);
+		const buyOrder = ORDERS.find((o) => o.orderId === buyOrderId);
+		const sellOrder = ORDERS.find((o) => o.orderId === sellOrderId);
 
-		if (!buyOrder || !sellOrder) {
-			throw new Error("Invalid Trade");
-		}
+		if (!buyOrder || !sellOrder) throw new Error("Invalid Trade");
 
-		// Currency Balance
-		let buyerBalance = BALANCES[buyOrder.userId]!.INR!;
-		let sellerBalance = BALANCES[sellOrder.userId]!.INR!;
+		const base = buyOrder.symbol.split("_")[0]!;
 
-		// Stock Balance
-		let buyerStockBalance = BALANCES[buyOrder.userId]![buyOrder.symbol] ?? {
-			available: 0,
-			locked: 0,
-		};
-		let sellerStockBalance = BALANCES[sellOrder.userId]![sellOrder.symbol]!;
+		const buyerUSD = ensureAsset(buyOrder.userId, "USD");
+		const sellerUSD = ensureAsset(sellOrder.userId, "USD");
 
-		// Currency Transfer
-		buyerBalance.locked -= qty * price;
-		sellerBalance.available += qty * price;
+		const buyerBase = ensureAsset(buyOrder.userId, base);
+		const sellerBase = ensureAsset(sellOrder.userId, base);
 
-		// Stock Transfer
-		buyerStockBalance.available += qty;
-		sellerStockBalance.locked -= qty;
+		// USD transfer
+		const cost = qty * price;
 
-		BALANCES[buyOrder.userId]![buyOrder.symbol] = buyerStockBalance;
-	});
+		buyerUSD.locked -= cost;
+		sellerUSD.available += cost;
+
+		// Asset transfer
+		sellerBase.locked -= qty;
+		buyerBase.available += qty;
+	}
 }
 
 export function releaseBalance(order: OrderRecord) {
-	const { userId, side, symbol, lockedAmount, qty, filledQty, fills } = order;
+	const { userId, side, symbol, qty, filledQty, fills } = order;
+
+	const baseAsset = symbol.split("_")[0]!;
+	const usd = ensureAsset(userId, "USD");
+	const base = ensureAsset(userId, baseAsset);
 
 	if (side === "BUY") {
-		const totalAmount = fills.reduce((total, fill) => total + fill.price * fill.qty, 0);
-		const remainingAmount = lockedAmount - totalAmount;
-		const currencyBalance = BALANCES[userId]!.INR!;
+		const spent = fills.reduce((t, f) => t + f.price * f.qty, 0);
+		const remaining = order.lockedAmount - spent;
 
-		if (currencyBalance.locked < remainingAmount) {
-			throw new Error("Insufficient Locked Balance");
-		}
+		if (remaining < 0) throw new Error("Invalid remaining amount");
+		if (usd.locked < remaining) throw new Error("Insufficient Locked Balance");
 
-		currencyBalance.available += remainingAmount;
-		currencyBalance.locked -= remainingAmount;
+		usd.locked -= remaining;
+		usd.available += remaining;
 
-		return remainingAmount;
+		return remaining;
 	} else {
 		const remainingQty = qty - filledQty;
-		const stockBalance = BALANCES[userId]![symbol]!;
 
-		if (stockBalance.locked < remainingQty) {
+		if (base.locked < remainingQty) {
 			throw new Error("Insufficient Locked Balance");
 		}
 
-		stockBalance.available += remainingQty;
-		stockBalance.locked -= remainingQty;
+		base.locked -= remainingQty;
+		base.available += remainingQty;
 
 		return remainingQty;
 	}

@@ -11,7 +11,7 @@ import { Skeleton } from "../components/ui/skeleton";
 import type { DepthLevel, OrderBook, StreamResponse } from "@/types";
 
 export function MarketPage() {
-	const { marketId = "BTC" } = useParams();
+	const { symbol = "BTC_USD" } = useParams();
 	const { user, loading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(true);
 
@@ -40,9 +40,9 @@ export function MarketPage() {
 
 				ws.onopen = async () => {
 					try {
-						ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`depth:${marketId}`] }));
+						ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`depth:${symbol}`] }));
 
-						const res = await fetch(`http://localhost:8000/markets/${marketId}/depth`);
+						const res = await fetch(`http://localhost:8000/markets/${symbol}/depth`);
 						const { lastUpdateId, bids, asks } = await res.json();
 
 						initializeOrderbook(bids, asks);
@@ -59,7 +59,7 @@ export function MarketPage() {
 				};
 
 				ws.onclose = () => {
-					ws.send(JSON.stringify({ method: "UNSUBSCRIBE", params: [`depth:${marketId}`] }));
+					ws.send(JSON.stringify({ method: "UNSUBSCRIBE", params: [`depth:${symbol}`] }));
 				};
 			} catch (e) {
 				console.error(e);
@@ -122,7 +122,7 @@ export function MarketPage() {
 	return (
 		<AppLayout>
 			<div className="flex flex-col h-[calc(100vh-48px)] p-4 gap-4 bg-background/40 overflow-hidden">
-				<MarketHeader market={marketId} />
+				<MarketHeader market={symbol} />
 
 				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
@@ -165,7 +165,7 @@ export function MarketPage() {
 
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
 						{user ? (
-							<TradeForm marketId={marketId} />
+							<TradeForm symbol={symbol} />
 						) : (
 							<div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
 								<p className="text-sm text-muted-foreground">Sign in to start trading</p>

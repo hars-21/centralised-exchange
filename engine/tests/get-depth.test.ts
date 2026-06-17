@@ -8,10 +8,10 @@ beforeEach(() => {
 });
 
 test("empty orderbook", () => {
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [],
 	});
@@ -22,7 +22,7 @@ test("bids sorted highest first", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -30,7 +30,7 @@ test("bids sorted highest first", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 120,
 		qty: 3,
 	});
@@ -38,15 +38,15 @@ test("bids sorted highest first", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 90,
 		qty: 2,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [
 			{
 				price: 120,
@@ -70,7 +70,7 @@ test("asks sorted lowest first", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 120,
 		qty: 3,
 	});
@@ -78,7 +78,7 @@ test("asks sorted lowest first", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -86,15 +86,15 @@ test("asks sorted lowest first", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 90,
 		qty: 2,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [
 			{
@@ -118,7 +118,7 @@ test("same price orders should be grouped", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 3,
 	});
@@ -126,15 +126,15 @@ test("same price orders should be grouped", () => {
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [
 			{
 				price: 100,
@@ -150,7 +150,7 @@ test("filled orders should not appear", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
@@ -158,15 +158,15 @@ test("filled orders should not appear", () => {
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [],
 	});
@@ -177,16 +177,16 @@ test("cancelled orders should not appear", () => {
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		price: 100,
 		qty: 5,
 	});
 	cancelOrder("1", order.orderId);
 
-	const depth = getDepth("BTC");
+	const depth = getDepth("BTC_USD");
 
 	expect(depth).toMatchObject({
-		symbol: "BTC",
+		symbol: "BTC_USD",
 		bids: [],
 		asks: [],
 	});

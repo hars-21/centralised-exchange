@@ -1,13 +1,13 @@
 import { BALANCES, ORDERBOOK, ORDERS } from "../src/store";
 
 export function resetState() {
-	ORDERBOOK.BTC = {
+	ORDERBOOK.BTC_USD = {
 		bids: {},
 		asks: {},
 	};
 
 	BALANCES["1"] = {
-		INR: {
+		USD: {
 			available: 10000,
 			locked: 0,
 		},
@@ -18,7 +18,7 @@ export function resetState() {
 	};
 
 	BALANCES["2"] = {
-		INR: {
+		USD: {
 			available: 10000,
 			locked: 0,
 		},

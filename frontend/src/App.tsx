@@ -13,7 +13,7 @@ export function App() {
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/signup" element={<SignupPage />} />
 			<Route path="/profile" element={<ProfilePage />} />
-			<Route path="/market/:marketId" element={<MarketPage />} />
+			<Route path="/market/:symbol" element={<MarketPage />} />
 		</Routes>
 	);
 }
