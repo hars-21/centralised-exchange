@@ -58,6 +58,12 @@ export function getOrder(userId: string, orderId: string) {
 	return order;
 }
 
+export function getOpenOrders(userId: string) {
+	const orders = ORDERS.filter((order) => order.status === "OPEN" && order.userId === userId);
+
+	return orders;
+}
+
 export function cancelOrder(userId: string, orderId: string) {
 	const order = ORDERS.find((order) => order.orderId === orderId && order.userId === userId);
 

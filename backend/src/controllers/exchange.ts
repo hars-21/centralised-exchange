@@ -41,6 +41,19 @@ export async function createOrder(req: Request, res: Response) {
 	res.status(200).json(engineResponse.data);
 }
 
+export async function getOpenOrders(req: Request, res: Response) {
+	const userId = getUserId(req);
+
+	const engineResponse = await sendToEngine("get_open_orders", { userId });
+
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
+	}
+
+	res.status(200).json(engineResponse.data);
+}
+
 export async function getOrder(req: Request, res: Response) {
 	const userId = getUserId(req);
 	const parsedParams = orderIdParamSchema.safeParse(req.params);

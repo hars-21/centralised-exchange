@@ -1,5 +1,5 @@
 import { getUserBalance } from "./balance";
-import { cancelOrder, getOrder, placeOrder } from "./engine";
+import { cancelOrder, getOpenOrders, getOrder, placeOrder } from "./engine";
 import { getDepth } from "./orderbook";
 import type { EngineRequest } from "./types/engine";
 import { orderPayloadSchema } from "./types/order";
@@ -41,6 +41,14 @@ export function handleEngineRequest(message: EngineRequest) {
 		}
 
 		return getOrder(userId, orderId);
+	} else if (message.type === "get_open_orders") {
+		const { userId } = message.payload;
+
+		if (typeof userId !== "string") {
+			throw new Error("Invalid User ID");
+		}
+
+		return getOpenOrders(userId);
 	} else if (message.type === "cancel_order") {
 		const { userId, orderId } = message.payload;
 

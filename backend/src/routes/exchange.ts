@@ -8,12 +8,14 @@ import {
 	getDepth,
 	getMarkets,
 	getOrder,
+	getOpenOrders,
 	getTrades,
 } from "../controllers/exchange";
 
 export const exchangeRouter = Router();
 
 // Orders
+exchangeRouter.get("/orders/open", requireAuth, asyncHandler(getOpenOrders));
 exchangeRouter.post("/orders", requireAuth, asyncHandler(createOrder));
 exchangeRouter.get("/orders/:orderId", requireAuth, asyncHandler(getOrder));
 exchangeRouter.delete("/orders/:orderId", requireAuth, asyncHandler(cancelOrder));
