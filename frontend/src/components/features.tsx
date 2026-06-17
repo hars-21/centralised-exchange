@@ -14,7 +14,7 @@ export function Features() {
 					</h2>
 					<p className="mx-auto max-w-xl text-muted-foreground text-sm sm:text-base leading-relaxed">
 						Atlas provides fully transparent matching engine playground infrastructure designed
-						specifically for developers to build, understand, and validate trading code.
+						specifically for developers to build, understand and validate trading code.
 					</p>
 				</div>
 
@@ -97,7 +97,7 @@ export function Features() {
 							</h3>
 							<p className="text-sm leading-relaxed text-muted-foreground">
 								Unlike black-box exchanges, Atlas displays the internal matching logic of every
-								trade. Inspect how orders are filled, how depth triggers, and analyze matching
+								trade. Inspect how orders are filled, how depth triggers and analyze matching
 								latency step by step.
 							</p>
 							<ul className="space-y-2.5 text-xs text-muted-foreground">
@@ -145,7 +145,6 @@ export function Features() {
 									<span>client.ts</span>
 								</div>
 								<div className="p-4 font-mono text-[10px] space-y-3 leading-relaxed">
-									{/* Code request */}
 									<div>
 										<div className="text-muted-foreground/60">// Request Payload</div>
 										<pre className="text-foreground bg-muted/10 p-2.5 rounded-md border border-border/10">
@@ -244,8 +243,8 @@ export function Features() {
 							</h3>
 							<p className="text-sm leading-relaxed text-muted-foreground">
 								Build and refine strategies without financial risk. Place mock trades, manage
-								virtual asset allocations, and reset your playground balances instantly with a
-								single command or button click.
+								virtual asset allocations and reset your playground balances instantly with a single
+								command or button click.
 							</p>
 							<ul className="space-y-2.5 text-xs text-muted-foreground">
 								<li className="flex items-center gap-2">

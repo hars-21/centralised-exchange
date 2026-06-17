@@ -1,18 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/auth-layout";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 export function SignupPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const { setUser } = useAuth();
+	const navigate = useNavigate();
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		try {
+			const res = await fetch("http://localhost:8000/signup", {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password }),
+			});
+
+			const data = await res.json();
+			setUser({ id: data.id, username: data.username });
+			navigate("/");
+		} catch (e) {
+			console.error(e);
+		}
 	};
 
 	return (
@@ -22,7 +39,7 @@ export function SignupPage() {
 					<CardTitle className="text-center text-lg">Create your account</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-4">
+					<form onSubmit={handleSignup} className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="username">Username</Label>
 							<Input
@@ -41,16 +58,6 @@ export function SignupPage() {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								placeholder="Create a password"
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="confirm-password">Confirm Password</Label>
-							<Input
-								id="confirm-password"
-								type="password"
-								value={confirmPassword}
-								onChange={(e) => setConfirmPassword(e.target.value)}
-								placeholder="Confirm your password"
 							/>
 						</div>
 						<Button type="submit" className="w-full">

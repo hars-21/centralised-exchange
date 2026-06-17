@@ -7,13 +7,13 @@ export function Hero() {
 		<section className="relative flex min-h-[95vh] items-center justify-center px-6 pt-24 overflow-hidden bg-background">
 			<div className="mx-auto max-w-4xl text-center relative z-10">
 				<h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground">
-					Build, Test, and Understand{" "}
+					Build, Test and Understand{" "}
 					<span className="text-primary bg-clip-text">Trading Systems</span>
 				</h1>
 
 				<p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
 					Transparent, paper-trading infrastructure for developers. Replay markets, observe matching
-					execution, simulate strategies, and build with confidence.
+					execution, simulate strategies and build with confidence.
 				</p>
 
 				<div className="flex flex-wrap items-center justify-center gap-4">

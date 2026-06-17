@@ -24,11 +24,17 @@ export async function signup(req: Request, res: Response) {
 			},
 		});
 
-		res.status(201).json({
-			token: createToken({ id: user.id }),
-			userId: user.id,
-			username: user.username,
-		});
+		res
+			.status(201)
+			.cookie("token", createToken({ id: user.id }), {
+				httpOnly: true,
+				secure: false,
+				sameSite: "lax",
+			})
+			.json({
+				userId: user.id,
+				username: user.username,
+			});
 	} catch (e) {
 		res.status(409).json({ error: "username already exists" });
 	}
@@ -62,11 +68,17 @@ export async function signin(req: Request, res: Response) {
 			return;
 		}
 
-		res.status(200).json({
-			token: createToken({ id: user.id }),
-			userId: user.id,
-			username: user.username,
-		});
+		res
+			.status(200)
+			.cookie("token", createToken({ id: user.id }), {
+				httpOnly: true,
+				secure: false,
+				sameSite: "lax",
+			})
+			.json({
+				userId: user.id,
+				username: user.username,
+			});
 	} catch (e) {
 		res.status(409).json({ error: "username does not exist" });
 	}

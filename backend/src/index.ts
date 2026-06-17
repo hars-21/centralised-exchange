@@ -10,6 +10,7 @@ import { WebSocketServer } from "ws";
 import { subscriptionHandler } from "./utils/websocket";
 import { appRouter } from "./routes";
 import { env } from "./utils/env";
+import cors from "cors";
 
 await connectRedis();
 void listenForEngineresponses();
@@ -22,6 +23,14 @@ const wss = new WebSocketServer({ port: env.websocketPort }, () => {
 });
 subscriptionHandler(wss);
 
+const corsOptions = {
+	origin: "http://localhost:3000",
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	optionsSuccessStatus: 200,
+	credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

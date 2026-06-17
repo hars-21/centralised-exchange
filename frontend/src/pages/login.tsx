@@ -1,17 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/auth-layout";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 
 export function LoginPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+	const { setUser } = useAuth();
+	const navigate = useNavigate();
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		try {
+			const res = await fetch("http://localhost:8000/signin", {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password }),
+			});
+
+			const data = await res.json();
+			setUser({ id: data.id, username: data.username });
+			navigate("/");
+		} catch (e) {
+			console.error(e);
+		}
 	};
 
 	return (
@@ -21,7 +39,7 @@ export function LoginPage() {
 					<CardTitle className="text-center text-lg">Log in to Atlas</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-4">
+					<form onSubmit={handleLogin} className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="username">Username</Label>
 							<Input
