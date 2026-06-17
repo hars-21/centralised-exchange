@@ -23,7 +23,7 @@ test("requireAuth returns 401 when no token provided", () => {
 });
 
 test("requireAuth returns 401 for invalid token", () => {
-	const req = { headers: { authorization: "Bearer invalid-token" } } as any;
+	const req = { headers: { cookie: "token=invalid-token" } } as any;
 	const res = {
 		status: mock(() => res),
 		json: mock(() => undefined),
@@ -39,7 +39,7 @@ test("requireAuth returns 401 for invalid token", () => {
 
 test("requireAuth calls next for valid token", () => {
 	const token = createToken({ id: "user-1" });
-	const req = { headers: { authorization: `Bearer ${token}` } } as any;
+	const req = { headers: { cookie: `token=${token}` } } as any;
 	const res = {
 		status: mock(() => res),
 		json: mock(() => undefined),
