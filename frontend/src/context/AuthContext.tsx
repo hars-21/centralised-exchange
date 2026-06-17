@@ -1,8 +1,10 @@
+import type { UserBalance } from "@/types";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
 	id: string;
 	username: string;
+	balance: UserBalance;
 } | null;
 
 type AuthContext = {
@@ -20,7 +22,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	useEffect(() => {
 		const getMe = async () => {
 			try {
-				const res = await fetch("/me", {
+				setLoading(true);
+				const res = await fetch("http://localhost:8000/me", {
 					credentials: "include",
 				});
 
@@ -30,7 +33,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				}
 
 				const data = await res.json();
-				setUser(data.user);
+				const { userId, username, balance } = data;
+				setUser({
+					id: userId,
+					username,
+					balance,
+				});
 			} catch (e) {
 				setUser(null);
 			} finally {

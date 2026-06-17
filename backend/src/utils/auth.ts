@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "./env";
+import cookie from "cookie";
 
 interface TokenPayload {
 	id: string;
@@ -11,11 +12,8 @@ export function createToken(payload: TokenPayload): string {
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-	const authHeader = req.headers.authorization;
-	const token =
-		typeof authHeader === "string" && authHeader?.startsWith("Bearer")
-			? authHeader.slice(7)
-			: undefined;
+	const cookies = cookie.parse(req.headers.cookie ?? "");
+	const token = cookies.token;
 
 	if (!token) {
 		res.status(401).json({ error: "Missing auth token" });

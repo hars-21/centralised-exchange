@@ -4,7 +4,7 @@ import { sendToEngine } from "../utils/engineClient";
 import { prisma } from "../db";
 import { sendValidationError } from "../utils/validation";
 
-function getUserId(req: Request): string {
+export function getUserId(req: Request): string {
 	if (!req.userId) {
 		throw new Error("Missing authenticated user");
 	}

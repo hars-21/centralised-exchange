@@ -3,34 +3,57 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { useAuth } from "@/context/AuthContext";
 
-export function TradeForm() {
-	const [side, setSide] = useState<"buy" | "sell">("buy");
-	const [orderType, setOrderType] = useState<"limit" | "market">("limit");
+export function TradeForm({ marketId }: { marketId: string }) {
+	const [side, setSide] = useState<"BUY" | "SELL">("BUY");
+	const [orderType, setOrderType] = useState<"LIMIT" | "MARKET">("LIMIT");
 	const [price, setPrice] = useState("");
 	const [quantity, setQuantity] = useState("");
+	const { user, loading } = useAuth();
 
-	const handleSubmit = (e: React.FormEvent) => {
+	if (loading) return <p>Loading...</p>;
+
+	const handlePlaceOrder = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		try {
+			const res = await fetch("http://localhost:8000/orders", {
+				method: "POST",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					side,
+					type: orderType,
+					symbol: marketId,
+					price: Number(price),
+					qty: Number(quantity),
+				}),
+			});
+
+			const data = await res.json();
+		} catch (e) {
+			console.error(e);
+		}
 	};
 
 	return (
 		<div className="flex h-full flex-col select-none">
 			<Tabs
 				value={side}
-				onValueChange={(v) => setSide(v as "buy" | "sell")}
+				onValueChange={(v) => setSide(v as "BUY" | "SELL")}
 				className="flex flex-1 flex-col"
 			>
 				<div className="border-b border-border/40 p-4 bg-muted/15">
 					<TabsList className="grid w-full grid-cols-2 p-1 bg-muted/30 border border-border/10">
 						<TabsTrigger
-							value="buy"
+							value="BUY"
 							className="data-[state=active]:bg-success data-[state=active]:text-white text-xs font-semibold transition-all py-1.5"
 						>
 							Buy
 						</TabsTrigger>
 						<TabsTrigger
-							value="sell"
+							value="SELL"
 							className="data-[state=active]:bg-destructive data-[state=active]:text-white text-xs font-semibold transition-all py-1.5"
 						>
 							Sell
@@ -39,21 +62,24 @@ export function TradeForm() {
 				</div>
 
 				<TabsContent value={side} className="flex-1 p-5 flex flex-col justify-between" forceMount>
-					<form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col justify-between">
+					<form
+						onSubmit={handlePlaceOrder}
+						className="space-y-5 flex-1 flex flex-col justify-between"
+					>
 						<div className="space-y-4">
 							<div className="flex justify-between items-center text-xs">
 								<span className="text-muted-foreground">Available Balance</span>
 								<span className="font-mono text-foreground font-semibold">
-									— {side === "buy" ? "USD" : "BTC"}
+									{user?.balance.INR?.available} {side === "BUY" ? "USD" : "BTC"}
 								</span>
 							</div>
 
 							<div className="grid grid-cols-2 gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/20">
 								<button
 									type="button"
-									onClick={() => setOrderType("limit")}
+									onClick={() => setOrderType("LIMIT")}
 									className={`rounded-md py-1.5 text-xs font-semibold transition-all ${
-										orderType === "limit"
+										orderType === "LIMIT"
 											? "bg-card text-foreground shadow-xs border border-border/10"
 											: "text-muted-foreground hover:text-foreground"
 									}`}
@@ -62,9 +88,9 @@ export function TradeForm() {
 								</button>
 								<button
 									type="button"
-									onClick={() => setOrderType("market")}
+									onClick={() => setOrderType("MARKET")}
 									className={`rounded-md py-1.5 text-xs font-semibold transition-all ${
-										orderType === "market"
+										orderType === "MARKET"
 											? "bg-card text-foreground shadow-xs border border-border/10"
 											: "text-muted-foreground hover:text-foreground"
 									}`}
@@ -73,7 +99,7 @@ export function TradeForm() {
 								</button>
 							</div>
 
-							{orderType === "limit" ? (
+							{orderType === "LIMIT" ? (
 								<div className="space-y-1.5">
 									<Label htmlFor="price" className="text-xs font-medium text-muted-foreground">
 										Price
@@ -135,7 +161,7 @@ export function TradeForm() {
 						</div>
 
 						<div className="space-y-4 pt-4 border-t border-border/40">
-							{orderType === "limit" && price && quantity && (
+							{orderType === "LIMIT" && price && quantity && (
 								<div className="flex justify-between items-center text-xs">
 									<span className="text-muted-foreground">Est. Total</span>
 									<span className="font-mono font-bold text-foreground">
@@ -151,12 +177,12 @@ export function TradeForm() {
 							<Button
 								type="submit"
 								className={`w-full py-5 text-xs font-semibold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
-									side === "buy"
+									side === "BUY"
 										? "bg-success hover:bg-success/90 text-white shadow-sm shadow-success/15"
 										: "bg-destructive hover:bg-destructive/90 text-white shadow-sm shadow-destructive/15"
 								}`}
 							>
-								{side === "buy" ? "Place Buy Order" : "Place Sell Order"}
+								{side === "BUY" ? "Place Buy Order" : "Place Sell Order"}
 							</Button>
 						</div>
 					</form>

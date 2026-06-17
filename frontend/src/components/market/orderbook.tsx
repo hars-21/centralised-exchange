@@ -1,6 +1,7 @@
+import type { DepthLevel } from "@/types";
 import { Info } from "lucide-react";
 
-export function Orderbook() {
+export function Orderbook({ bids, asks }: { bids: DepthLevel[]; asks: DepthLevel[] }) {
 	return (
 		<div className="flex h-full flex-col select-none">
 			<div className="flex items-center justify-between border-b border-border/40 px-4 py-3 bg-muted/15">
@@ -24,13 +25,13 @@ export function Orderbook() {
 
 			<div className="flex flex-1 flex-col justify-between min-h-0 py-1.5">
 				<div className="flex flex-col justify-end flex-1 min-h-0">
-					{Array.from({ length: 6 }).map((_, i) => (
+					{Array.from(asks).map((ask, i) => (
 						<div
-							key={`ask-empty-${i}`}
+							key={`ask-${i}`}
 							className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
 						>
-							<span className="flex-1 text-destructive/40 font-medium">—</span>
-							<span className="flex-1 text-right text-muted-foreground/30">—</span>
+							<span className="flex-1 text-destructive/40 font-medium">{ask.price}</span>
+							<span className="flex-1 text-right text-muted-foreground/30">{ask.qty}</span>
 							<span className="flex-1 text-right text-muted-foreground/30">—</span>
 						</div>
 					))}
@@ -49,13 +50,13 @@ export function Orderbook() {
 				</div>
 
 				<div className="flex flex-col justify-start flex-1 min-h-0">
-					{Array.from({ length: 6 }).map((_, i) => (
+					{Array.from(bids).map((bid, i) => (
 						<div
-							key={`bid-empty-${i}`}
+							key={`bid-${i}`}
 							className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
 						>
-							<span className="flex-1 text-success/40 font-medium">—</span>
-							<span className="flex-1 text-right text-muted-foreground/30">—</span>
+							<span className="flex-1 text-success/40 font-medium">{bid.price}</span>
+							<span className="flex-1 text-right text-muted-foreground/30">{bid.qty}</span>
 							<span className="flex-1 text-right text-muted-foreground/30">—</span>
 						</div>
 					))}

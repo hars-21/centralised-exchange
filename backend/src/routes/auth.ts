@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { signin, signup } from "../controllers/auth";
+import { getUserData, signin, signup } from "../controllers/auth";
 import { asyncHandler } from "../utils/asyncHandler";
+import { requireAuth } from "../utils/auth";
 
 export const authRouter = Router();
 
+authRouter.get("/me", requireAuth, asyncHandler(getUserData));
 authRouter.post("/signup", asyncHandler(signup));
 authRouter.post("/signin", asyncHandler(signin));
