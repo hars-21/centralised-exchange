@@ -25,7 +25,7 @@ export function LoginPage() {
 			});
 
 			const data = await res.json();
-			setUser({ id: data.id, username: data.username });
+			setUser({ id: data.id, username: data.username, balance: data.balance || {} });
 			navigate("/");
 		} catch (e) {
 			console.error(e);

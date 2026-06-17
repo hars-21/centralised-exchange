@@ -4,6 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useAuth } from "@/context/AuthContext";
+import { Skeleton } from "../ui/skeleton";
 
 export function TradeForm({ marketId }: { marketId: string }) {
 	const [side, setSide] = useState<"BUY" | "SELL">("BUY");
@@ -12,7 +13,24 @@ export function TradeForm({ marketId }: { marketId: string }) {
 	const [quantity, setQuantity] = useState("");
 	const { user, loading } = useAuth();
 
-	if (loading) return <p>Loading...</p>;
+	if (loading) {
+		return (
+			<div className="flex h-full flex-col select-none p-5 space-y-6 animate-pulse">
+				<Skeleton className="h-9 w-full" />
+				<div className="space-y-4">
+					<div className="space-y-2">
+						<Skeleton className="h-3 w-12" />
+						<Skeleton className="h-10 w-full" />
+					</div>
+					<div className="space-y-2">
+						<Skeleton className="h-3.5 w-16" />
+						<Skeleton className="h-10 w-full" />
+					</div>
+				</div>
+				<Skeleton className="h-10 w-full mt-auto" />
+			</div>
+		);
+	}
 
 	const handlePlaceOrder = async (e: React.FormEvent) => {
 		e.preventDefault();

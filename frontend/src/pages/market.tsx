@@ -1,13 +1,17 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "../components/app-layout";
 import { MarketHeader } from "../components/market/market-header";
 import { Orderbook } from "../components/market/orderbook";
 import { TradeForm } from "../components/market/trade-form";
 import { OpenOrders } from "../components/market/open-orders";
+import { Button } from "../components/ui/button";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Skeleton } from "../components/ui/skeleton";
 
 export function MarketPage() {
 	const { marketId = "BTC" } = useParams();
+	const { user, loading: authLoading } = useAuth();
 	const [bids, setBids] = useState([]);
 	const [asks, setAsks] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -31,7 +35,7 @@ export function MarketPage() {
 		getDepth();
 	}, []);
 
-	if (loading) return <p>Loading...</p>;
+	const isDataLoading = loading || authLoading;
 
 	return (
 		<AppLayout>
@@ -40,26 +44,54 @@ export function MarketPage() {
 
 				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
-						<Orderbook bids={bids} asks={asks} />
+						<Orderbook bids={bids} asks={asks} loading={isDataLoading} />
 					</div>
 
 					<div className="flex flex-1 flex-col gap-4 h-full min-w-0">
-						<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs flex items-center justify-center min-h-50">
-							<div className="text-center p-6">
-								<p className="text-sm font-medium">Chart Visualization</p>
-								<p className="text-xs text-muted-foreground mt-1">
-									Replay and strategy analytics coming soon
-								</p>
+						{isDataLoading ? (
+							<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs p-6 flex flex-col justify-between min-h-50 animate-pulse">
+								<div className="flex justify-between items-center">
+									<Skeleton className="h-4 w-32" />
+									<Skeleton className="h-4 w-12" />
+								</div>
+								<div className="flex-1 flex flex-col justify-end gap-2.5 py-6">
+									<Skeleton className="h-3 w-full" />
+									<Skeleton className="h-5 w-5/6" />
+									<Skeleton className="h-3.5 w-full" />
+								</div>
+								<div className="flex justify-between">
+									<Skeleton className="h-3 w-8" />
+									<Skeleton className="h-3 w-8" />
+									<Skeleton className="h-3 w-8" />
+								</div>
 							</div>
-						</div>
+						) : (
+							<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs flex items-center justify-center min-h-50">
+								<div className="text-center p-6">
+									<p className="text-sm font-medium">Chart Visualization</p>
+									<p className="text-xs text-muted-foreground mt-1">
+										Replay and strategy analytics coming soon
+									</p>
+								</div>
+							</div>
+						)}
 
 						<div className="bg-card rounded-xl border border-border/40 shadow-xs overflow-hidden h-55 shrink-0">
-							<OpenOrders />
+							<OpenOrders loading={isDataLoading} />
 						</div>
 					</div>
 
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
-						<TradeForm marketId={marketId} />
+						{user ? (
+							<TradeForm marketId={marketId} />
+						) : (
+							<div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+								<p className="text-sm text-muted-foreground">Sign in to start trading</p>
+								<Link to="/login">
+									<Button size="sm">Sign in</Button>
+								</Link>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

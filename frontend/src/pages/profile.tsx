@@ -1,23 +1,26 @@
+import { Navigate } from "react-router-dom";
 import { AppLayout } from "../components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import Loader from "@/components/ui/loader";
+
+const ASSET_NAMES: Record<string, string> = {
+	USD: "US Dollar",
+	BTC: "Bitcoin",
+	ETH: "Ethereum",
+	SOL: "Solana",
+};
 
 export function ProfilePage() {
 	const { user, setUser, loading } = useAuth();
-	const navigate = useNavigate();
 
-	if (loading) return <p>Loading...</p>;
-
-	if (!user) {
-		navigate("/");
-	}
+	if (loading) return <Loader />;
+	if (!user) return <Navigate to="/" replace />;
 
 	const handleLogout = () => {
 		setUser(null);
-		navigate("/");
 	};
 
 	return (
@@ -51,7 +54,7 @@ export function ProfilePage() {
 						<CardContent>
 							<div className="text-sm flex items-center justify-between">
 								<span className="text-muted-foreground">Username</span>
-								<span className="font-mono font-medium text-foreground">{user?.username}</span>
+								<span className="font-mono font-medium text-foreground">{user.username}</span>
 							</div>
 						</CardContent>
 					</Card>
@@ -64,22 +67,23 @@ export function ProfilePage() {
 						</CardHeader>
 						<CardContent>
 							<div className="divide-y divide-border/30">
-								{[
-									{ currency: "USD", name: "US Dollar", balance: "—" },
-									{ currency: "BTC", name: "Bitcoin", balance: "—" },
-									{ currency: "ETH", name: "Ethereum", balance: "—" },
-								].map((item) => (
+								{Object.entries(user.balance || {}).map(([currency, bal]) => (
 									<div
-										key={item.currency}
+										key={currency}
 										className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
 									>
 										<div className="flex flex-col">
-											<span className="font-semibold text-foreground">{item.currency}</span>
+											<span className="font-semibold text-foreground">{currency}</span>
 											<span className="text-[10px] text-muted-foreground font-medium">
-												{item.name}
+												{ASSET_NAMES[currency] || currency}
 											</span>
 										</div>
-										<span className="font-mono text-foreground font-semibold">{item.balance}</span>
+										<span className="font-mono text-foreground font-semibold">
+											{bal.available.toLocaleString(undefined, {
+												minimumFractionDigits: 2,
+												maximumFractionDigits: 8,
+											})}
+										</span>
 									</div>
 								))}
 							</div>

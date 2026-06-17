@@ -1,12 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X, Sun, Moon, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../lib/theme-provider";
+import { useAuth } from "@/context/AuthContext";
 
 export function Navbar() {
 	const [open, setOpen] = useState(false);
 	const { theme, toggleTheme } = useTheme();
+	const { user, setUser } = useAuth();
+	const navigate = useNavigate();
+
+	const handleLogout = () => {
+		setUser(null);
+		navigate("/");
+	};
 
 	return (
 		<header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
@@ -28,12 +36,28 @@ export function Navbar() {
 					<Button variant="ghost" size="icon-sm" onClick={toggleTheme} aria-label="Toggle Theme" className="mr-1">
 						{theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
 					</Button>
-					<Link to="/login">
-						<Button variant="ghost" size="sm">Log in</Button>
-					</Link>
-					<Link to="/signup">
-						<Button size="sm">Sign up</Button>
-					</Link>
+					{user ? (
+						<>
+							<Link to="/profile">
+								<Button variant="ghost" size="sm" className="gap-2">
+									<User className="h-3.5 w-3.5" />
+									{user.username}
+								</Button>
+							</Link>
+							<Button onClick={handleLogout} variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+								<LogOut className="h-3.5 w-3.5" />
+							</Button>
+						</>
+					) : (
+						<>
+							<Link to="/login">
+								<Button variant="ghost" size="sm">Log in</Button>
+							</Link>
+							<Link to="/signup">
+								<Button size="sm">Sign up</Button>
+							</Link>
+						</>
+					)}
 				</div>
 
 				<button
@@ -56,8 +80,24 @@ export function Navbar() {
 							</Button>
 						</div>
 						<div className="flex gap-3 pt-2 border-t">
-							<Link to="/login" className="flex-1"><Button variant="ghost" size="sm" className="w-full">Log in</Button></Link>
-							<Link to="/signup" className="flex-1"><Button size="sm" className="w-full">Sign up</Button></Link>
+							{user ? (
+								<>
+									<Link to="/profile" className="flex-1" onClick={() => setOpen(false)}>
+										<Button variant="ghost" size="sm" className="w-full gap-2">
+											<User className="h-3.5 w-3.5" />
+											{user.username}
+										</Button>
+									</Link>
+									<Button onClick={() => { handleLogout(); setOpen(false); }} variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+										<LogOut className="h-3.5 w-3.5" />
+									</Button>
+								</>
+							) : (
+								<>
+									<Link to="/login" className="flex-1"><Button variant="ghost" size="sm" className="w-full">Log in</Button></Link>
+									<Link to="/signup" className="flex-1"><Button size="sm" className="w-full">Sign up</Button></Link>
+								</>
+							)}
 						</div>
 					</nav>
 				</div>
