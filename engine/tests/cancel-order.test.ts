@@ -9,6 +9,7 @@ beforeEach(() => {
 
 test("cancel open limit order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -34,6 +35,7 @@ test("cancel open limit order", () => {
 
 test("cancel partially filled order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -43,6 +45,7 @@ test("cancel partially filled order", () => {
 	});
 
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -68,6 +71,7 @@ test("cancel partially filled order", () => {
 
 test("cancel filled order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -77,6 +81,7 @@ test("cancel filled order", () => {
 	});
 
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -92,6 +97,7 @@ test("cancel filled order", () => {
 
 test("cancel already cancelled order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -102,9 +108,8 @@ test("cancel already cancelled order", () => {
 
 	cancelOrder("1", order.orderId);
 
-	expect(() => {
-		cancelOrder("1", order.orderId);
-	}).toThrow("Order already cancelled");
+	const result = cancelOrder("1", order.orderId);
+	expect(result).toMatchObject({ message: "Order already cancelled" });
 });
 
 test("cancel unknown order", () => {
@@ -115,6 +120,7 @@ test("cancel unknown order", () => {
 
 test("user tries to cancel another user's order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",

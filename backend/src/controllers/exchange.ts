@@ -23,8 +23,10 @@ export async function createOrder(req: Request, res: Response) {
 
 	const { side, type, symbol, qty } = parsedBody.data;
 	const price = type === "MARKET" ? null : parsedBody.data.price;
+	const orderId = crypto.randomUUID();
 
 	const engineResponse = await sendToEngine("create_order", {
+		orderId,
 		userId,
 		type,
 		side,

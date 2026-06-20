@@ -24,6 +24,7 @@ test("new user balance", () => {
 
 test("buyer balance after fill", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -32,6 +33,7 @@ test("buyer balance after fill", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -56,6 +58,7 @@ test("buyer balance after fill", () => {
 
 test("seller balance after fill", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -64,6 +67,7 @@ test("seller balance after fill", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -88,6 +92,7 @@ test("seller balance after fill", () => {
 
 test("open order should lock balance", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -97,6 +102,7 @@ test("open order should lock balance", () => {
 	});
 
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -125,6 +131,7 @@ test("open order should lock balance", () => {
 
 test("cancelled order should unlock balance", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",

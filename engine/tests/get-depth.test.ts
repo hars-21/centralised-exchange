@@ -19,6 +19,7 @@ test("empty orderbook", () => {
 
 test("bids sorted highest first", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -27,6 +28,7 @@ test("bids sorted highest first", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -35,6 +37,7 @@ test("bids sorted highest first", () => {
 		qty: 3,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -67,6 +70,7 @@ test("bids sorted highest first", () => {
 
 test("asks sorted lowest first", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -75,6 +79,7 @@ test("asks sorted lowest first", () => {
 		qty: 3,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -83,6 +88,7 @@ test("asks sorted lowest first", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -115,6 +121,7 @@ test("asks sorted lowest first", () => {
 
 test("same price orders should be grouped", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -123,6 +130,7 @@ test("same price orders should be grouped", () => {
 		qty: 3,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -147,6 +155,7 @@ test("same price orders should be grouped", () => {
 
 test("filled orders should not appear", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -155,6 +164,7 @@ test("filled orders should not appear", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -174,6 +184,7 @@ test("filled orders should not appear", () => {
 
 test("cancelled orders should not appear", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",

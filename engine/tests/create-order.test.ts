@@ -9,6 +9,7 @@ beforeEach(() => {
 
 test("limit buy order does not match", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -18,6 +19,7 @@ test("limit buy order does not match", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -54,6 +56,7 @@ test("limit buy order does not match", () => {
 
 test("limit buy order matches best ask", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -63,6 +66,7 @@ test("limit buy order matches best ask", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -80,6 +84,7 @@ test("limit buy order matches best ask", () => {
 
 test("limit buy order has better price than best ask", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -89,6 +94,7 @@ test("limit buy order has better price than best ask", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -106,6 +112,7 @@ test("limit buy order has better price than best ask", () => {
 
 test("limit sell order does not match", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -115,6 +122,7 @@ test("limit sell order does not match", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -133,6 +141,7 @@ test("limit sell order does not match", () => {
 
 test("limit sell order has better price than best bid", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -142,6 +151,7 @@ test("limit sell order has better price than best bid", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -159,6 +169,7 @@ test("limit sell order has better price than best bid", () => {
 
 test("partial fill for limit order", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -168,6 +179,7 @@ test("partial fill for limit order", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -198,6 +210,7 @@ test("partial fill for limit order", () => {
 
 test("match multiple price levels", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -206,6 +219,7 @@ test("match multiple price levels", () => {
 		qty: 2,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -214,6 +228,7 @@ test("match multiple price levels", () => {
 		qty: 3,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -223,6 +238,7 @@ test("match multiple price levels", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -240,6 +256,7 @@ test("match multiple price levels", () => {
 
 test("limit buy orders should not cross above allowed price", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -248,6 +265,7 @@ test("limit buy orders should not cross above allowed price", () => {
 		qty: 2,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -256,6 +274,7 @@ test("limit buy orders should not cross above allowed price", () => {
 		qty: 3,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -265,6 +284,7 @@ test("limit buy orders should not cross above allowed price", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",
@@ -300,6 +320,7 @@ test("limit buy orders should not cross above allowed price", () => {
 
 test("market buy order fully filled", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -309,6 +330,7 @@ test("market buy order fully filled", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "MARKET",
@@ -326,6 +348,7 @@ test("market buy order fully filled", () => {
 
 test("market buy order partially filled", () => {
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -335,6 +358,7 @@ test("market buy order partially filled", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "MARKET",
@@ -353,6 +377,7 @@ test("market buy order partially filled", () => {
 test("market order with empty book", () => {
 	expect(() => {
 		placeOrder({
+			orderId: crypto.randomUUID(),
 			userId: "2",
 			side: "BUY",
 			type: "MARKET",
@@ -365,6 +390,7 @@ test("market order with empty book", () => {
 
 test("market buy order consumes first seller at price level", () => {
 	const firstOrder = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -373,6 +399,7 @@ test("market buy order consumes first seller at price level", () => {
 		qty: 5,
 	});
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "SELL",
 		type: "LIMIT",
@@ -382,6 +409,7 @@ test("market buy order consumes first seller at price level", () => {
 	});
 
 	const result = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "BUY",
 		type: "LIMIT",

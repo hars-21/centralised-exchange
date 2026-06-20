@@ -2,6 +2,7 @@ import z from "zod";
 
 export const orderPayloadSchema = z.discriminatedUnion("type", [
 	z.object({
+		orderId: z.string().trim().min(1, "orderId is required"),
 		userId: z.string().trim().min(1, "userId is required"),
 		type: z.literal("LIMIT"),
 		side: z.enum(["BUY", "SELL"]),
@@ -10,6 +11,7 @@ export const orderPayloadSchema = z.discriminatedUnion("type", [
 		qty: z.number().positive("qty must be a positive number"),
 	}),
 	z.object({
+		orderId: z.string().trim().min(1, "orderId is required"),
 		userId: z.string().trim().min(1, "userId is required"),
 		type: z.literal("MARKET"),
 		side: z.enum(["BUY", "SELL"]),

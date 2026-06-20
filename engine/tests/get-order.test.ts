@@ -8,6 +8,7 @@ beforeEach(() => {
 
 test("open order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -31,6 +32,7 @@ test("open order", () => {
 
 test("partially filled order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -40,6 +42,7 @@ test("partially filled order", () => {
 	});
 
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -62,6 +65,7 @@ test("partially filled order", () => {
 
 test("filled order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",
@@ -71,6 +75,7 @@ test("filled order", () => {
 	});
 
 	placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "2",
 		side: "SELL",
 		type: "LIMIT",
@@ -99,6 +104,7 @@ test("unknown order", () => {
 
 test("user tries to read another user's order", () => {
 	const order = placeOrder({
+		orderId: crypto.randomUUID(),
 		userId: "1",
 		side: "BUY",
 		type: "LIMIT",

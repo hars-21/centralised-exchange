@@ -61,6 +61,7 @@ export interface Market {
 }
 
 export interface CreateOrderInput {
+	orderId: string;
 	userId: string;
 	side: Side;
 	type: OrderType;

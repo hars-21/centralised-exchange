@@ -14,7 +14,6 @@ export function placeOrder(orderInput: CreateOrderInput) {
 
 	const order: OrderRecord = {
 		...orderInput,
-		orderId: crypto.randomUUID(),
 		filledQty: 0,
 		status: "OPEN",
 		fills: [],
@@ -71,7 +70,7 @@ export function cancelOrder(userId: string, orderId: string) {
 
 	if (order.status === "FILLED") throw new Error("Filled orders cannot be cancelled");
 
-	if (order.status === "CANCELLED") throw new Error("Order already cancelled");
+	if (order.status === "CANCELLED") return { message: "Order already cancelled" };
 
 	removeOrderFromBook(order);
 
