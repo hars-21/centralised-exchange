@@ -2,63 +2,70 @@ import { getUserBalance } from "./balance";
 import { cancelOrder, getOpenOrders, getOrder, placeOrder } from "./engine";
 import { getDepth } from "./orderbook";
 import type { EngineRequest } from "./types/engine";
-import { orderPayloadSchema } from "./types/order";
+import {
+	orderIdPayloadSchema,
+	orderPayloadSchema,
+	symbolPayloadSchema,
+	userPayloadSchema,
+} from "./types/order";
 
 export function handleEngineRequest(message: EngineRequest) {
 	if (message.type === "create_order") {
 		const parsedPayload = orderPayloadSchema.safeParse(message.payload);
 
 		if (!parsedPayload.success) {
-			throw new Error("Invalid Order Payload");
+			throw new Error("Invalid order payload");
 		}
 
 		return placeOrder(parsedPayload.data);
 	} else if (message.type === "get_depth") {
-		const { symbol } = message.payload;
+		const parsedPayload = symbolPayloadSchema.safeParse(message.payload);
 
-		if (typeof symbol !== "string") {
+		if (!parsedPayload.success) {
 			throw new Error("Invalid symbol");
 		}
 
+		const { symbol } = parsedPayload.data;
+
 		return getDepth(symbol);
 	} else if (message.type === "get_user_balance") {
-		const { userId } = message.payload;
+		const parsedPayload = userPayloadSchema.safeParse(message.payload);
 
-		if (typeof userId !== "string") {
-			throw new Error("Invalid User ID");
+		if (!parsedPayload.success) {
+			throw new Error("Invalid userId");
 		}
+
+		const { userId } = parsedPayload.data;
 
 		return getUserBalance(userId);
 	} else if (message.type === "get_order") {
-		const { userId, orderId } = message.payload;
+		const parsedPayload = orderIdPayloadSchema.safeParse(message.payload);
 
-		if (typeof userId !== "string") {
-			throw new Error("Invalid User ID");
+		if (!parsedPayload.success) {
+			throw new Error("Invalid OrderId");
 		}
 
-		if (typeof orderId !== "string") {
-			throw new Error("Invalid Order ID");
-		}
+		const { userId, orderId } = parsedPayload.data;
 
 		return getOrder(userId, orderId);
 	} else if (message.type === "get_open_orders") {
-		const { userId } = message.payload;
+		const parsedPayload = userPayloadSchema.safeParse(message.payload);
 
-		if (typeof userId !== "string") {
-			throw new Error("Invalid User ID");
+		if (!parsedPayload.success) {
+			throw new Error("Invalid userId");
 		}
+
+		const { userId } = parsedPayload.data;
 
 		return getOpenOrders(userId);
 	} else if (message.type === "cancel_order") {
-		const { userId, orderId } = message.payload;
+		const parsedPayload = orderIdPayloadSchema.safeParse(message.payload);
 
-		if (typeof userId !== "string") {
-			throw new Error("Invalid User ID");
+		if (!parsedPayload.success) {
+			throw new Error("Invalid OrderId");
 		}
 
-		if (typeof orderId !== "string") {
-			throw new Error("Invalid Order ID");
-		}
+		const { userId, orderId } = parsedPayload.data;
 
 		return cancelOrder(userId, orderId);
 	} else {

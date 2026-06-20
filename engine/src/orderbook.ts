@@ -1,4 +1,4 @@
-import { publishDepth } from "../src/redis/publish";
+import { publishDepth } from "./redis/publish";
 import { ORDERBOOK } from "./store";
 import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/store";
 

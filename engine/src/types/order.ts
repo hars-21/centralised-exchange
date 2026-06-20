@@ -18,3 +18,16 @@ export const orderPayloadSchema = z.discriminatedUnion("type", [
 		qty: z.number().positive("qty must be a positive number"),
 	}),
 ]);
+
+export const symbolPayloadSchema = z.object({
+	symbol: z.string().trim().min(1, "symbol is required"),
+});
+
+export const userPayloadSchema = z.object({
+	userId: z.string().trim().min(1, "userId is required"),
+});
+
+export const orderIdPayloadSchema = z.object({
+	userId: z.string().trim().min(1, "userId is required"),
+	orderId: z.string().trim().min(1, "orderId is required"),
+});
