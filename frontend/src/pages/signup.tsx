@@ -10,11 +10,13 @@ import { useAuth } from "@/context/AuthContext";
 export function SignupPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
 	const { setUser } = useAuth();
 	const navigate = useNavigate();
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setError("");
 
 		try {
 			const res = await fetch("http://localhost:8000/signup", {
@@ -25,10 +27,16 @@ export function SignupPage() {
 			});
 
 			const data = await res.json();
+
+			if (!res.ok) {
+				setError(data.message || data.error || "Signup failed");
+				return;
+			}
+
 			setUser({ id: data.id, username: data.username, balance: data.balance || {} });
 			navigate("/");
 		} catch (e) {
-			console.error(e);
+			setError("Network error. Please try again.");
 		}
 	};
 
@@ -40,6 +48,11 @@ export function SignupPage() {
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSignup} className="space-y-4">
+						{error && (
+							<div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+								{error}
+							</div>
+						)}
 						<div className="space-y-2">
 							<Label htmlFor="username">Username</Label>
 							<Input

@@ -5,10 +5,12 @@ export function Orderbook({
 	bids,
 	asks,
 	loading,
+	symbol,
 }: {
 	bids: Record<number, number>;
 	asks: Record<number, number>;
 	loading?: boolean;
+	symbol: string;
 }) {
 	if (loading) {
 		return (
@@ -94,11 +96,11 @@ export function Orderbook({
 
 			<div className="flex border-b border-border/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 bg-muted/5">
 				<span className="flex-1">Price (USD)</span>
-				<span className="flex-1 text-right">Size (BTC)</span>
+				<span className="flex-1 text-right">Size ({symbol.split("_")[0]})</span>
 				<span className="flex-1 text-right">Total</span>
 			</div>
 
-			<div className="flex flex-1 flex-col justify-between min-h-0 py-1.5">
+			<div className="flex flex-1 flex-col justify-between min-h-0 py-1.5 overflow-hidden">
 				<div className="flex flex-col-reverse justify-start flex-1 min-h-0">
 					{showMockAsks
 						? Array.from({ length: 6 }).map((_, i) => (

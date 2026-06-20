@@ -23,7 +23,7 @@ export function subscriptionHandler(server: WebSocketServer) {
 						activeSubscriptions[param] = [];
 					}
 
-					activeSubscriptions[param] = activeSubscriptions[param].filter((x) => x == socket);
+					activeSubscriptions[param] = activeSubscriptions[param].filter((x) => x !== socket);
 				});
 			}
 		});

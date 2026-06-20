@@ -66,13 +66,13 @@ export function TradeForm({ symbol }: { symbol: string }) {
 					<TabsList className="grid w-full grid-cols-2 p-1 bg-muted/30 border border-border/10">
 						<TabsTrigger
 							value="BUY"
-							className="data-[state=active]:bg-success data-[state=active]:text-white text-xs font-semibold transition-all py-1.5"
+							className="data-[state=active]:bg-success data-[state=active]:text-white text-xs font-semibold transition-all py-1.5 dark:data-[state=active]:bg-success"
 						>
 							Buy
 						</TabsTrigger>
 						<TabsTrigger
 							value="SELL"
-							className="data-[state=active]:bg-destructive data-[state=active]:text-white text-xs font-semibold transition-all py-1.5"
+							className="data-[state=active]:bg-destructive data-[state=active]:text-white text-xs font-semibold transition-all py-1.5 dark:data-[state=active]:bg-destructive"
 						>
 							Sell
 						</TabsTrigger>
@@ -90,7 +90,7 @@ export function TradeForm({ symbol }: { symbol: string }) {
 								<span className="font-mono text-foreground font-semibold">
 									{side === "BUY"
 										? `${user?.balance.USD?.available ?? 0} USD`
-										: `${user?.balance[symbol]?.available ?? 0} ${symbol}`}
+										: `${user?.balance[symbol.split("_")[0]!]?.available ?? 0} ${symbol.split("_")[0]}`}
 								</span>
 							</div>
 
@@ -174,7 +174,7 @@ export function TradeForm({ symbol }: { symbol: string }) {
 										className="font-mono pr-12 text-sm h-10"
 									/>
 									<div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/80 tracking-wider">
-										BTC
+										{symbol.split("_")[0]}
 									</div>
 								</div>
 							</div>

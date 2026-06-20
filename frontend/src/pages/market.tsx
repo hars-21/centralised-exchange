@@ -126,7 +126,12 @@ export function MarketPage() {
 
 				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
-						<Orderbook bids={orderbook.bids} asks={orderbook.asks} loading={isDataLoading} />
+						<Orderbook
+							bids={orderbook.bids}
+							asks={orderbook.asks}
+							loading={isDataLoading}
+							symbol={symbol}
+						/>
 					</div>
 
 					<div className="flex flex-1 flex-col gap-4 h-full min-w-0">
