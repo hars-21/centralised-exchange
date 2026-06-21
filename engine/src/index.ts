@@ -31,6 +31,7 @@ for (;;) {
 		for (const message of stream.messages) {
 			const msg = message.message;
 			let request: EngineRequest;
+			lastID = message.id;
 
 			try {
 				request = {
@@ -64,8 +65,6 @@ for (;;) {
 					},
 				});
 			}
-
-			lastID = message.id;
 		}
 
 		for (const response of responses) {

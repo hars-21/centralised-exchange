@@ -18,6 +18,9 @@ export function getUserBalance(userId: string): UserBalance {
 	if (!BALANCES[userId]) {
 		BALANCES[userId] = {
 			USD: { available: 10000, locked: 0 },
+			BTC: { available: 100, locked: 0 },
+			SOL: { available: 100, locked: 0 },
+			ETH: { available: 100, locked: 0 },
 		};
 	}
 

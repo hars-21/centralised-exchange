@@ -29,6 +29,10 @@ export function placeOrder(orderInput: CreateOrderInput) {
 		settleTrades(order.fills);
 	}
 
+	if (order.type === "MARKET" && order.status === "PARTIALLY_FILLED") {
+		order.status = "CANCELLED";
+	}
+
 	if (orderInput.type === "MARKET" || order.status === "FILLED") {
 		releaseBalance(order);
 	}

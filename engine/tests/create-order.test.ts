@@ -368,7 +368,7 @@ test("market buy order partially filled", () => {
 	});
 
 	expect(result).toMatchObject({
-		status: "PARTIALLY_FILLED",
+		status: "CANCELLED",
 		filledQty: 2,
 		averagePrice: 100,
 	});
