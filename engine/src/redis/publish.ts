@@ -1,16 +1,10 @@
 import { publisher } from "./client";
-import type { Depth } from "../types/domain";
+import type { EventMessage } from "../types/event";
 
-export async function publishEvent(message: Depth, lastUpdateId: number) {
+export async function publishEvent(message: EventMessage) {
 	if (!publisher.isOpen) {
 		return;
 	}
 
-	await publisher.publish(
-		`depth:${message.symbol}`,
-		JSON.stringify({
-			lastUpdateId,
-			...message,
-		}),
-	);
+	await publisher.publish(`${message.event}:${message.symbol}`, JSON.stringify(message));
 }

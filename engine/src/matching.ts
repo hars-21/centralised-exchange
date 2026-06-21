@@ -1,4 +1,4 @@
-import { addOrderToBook, getBestAsk, getBestBid, publishDepth } from "./orderbook";
+import { addOrderToBook, getBestAsk, getBestBid, publishDepth, publishFill } from "./orderbook";
 import { FILLS, ORDERBOOK } from "./store";
 import type { OrderRecord } from "./types/domain";
 
@@ -59,7 +59,14 @@ export function matchOrder(order: OrderRecord) {
 
 				priceLevel.totalQty -= availableQty;
 				priceLevel.orders.shift();
-				publishDepth(order.symbol, bestPrice, priceLevel, matchSide);
+
+				publishFill({
+					symbol: fill.symbol,
+					price: fill.price,
+					qty: fill.qty,
+					side: order.side,
+					timestamp: fill.createdAt,
+				});
 			} else {
 				restingOrder.filledQty += remainingQty;
 				priceLevel.totalQty -= remainingQty;
@@ -84,8 +91,22 @@ export function matchOrder(order: OrderRecord) {
 				restingOrder.fills.push(fill);
 
 				remainingQty = 0;
-				publishDepth(order.symbol, bestPrice, priceLevel, matchSide);
+
+				publishFill({
+					symbol: fill.symbol,
+					price: fill.price,
+					qty: fill.qty,
+					side: order.side,
+					timestamp: fill.createdAt,
+				});
 			}
+
+			publishDepth({
+				symbol: order.symbol,
+				price: bestPrice,
+				qty: priceLevel.totalQty,
+				side: matchSide,
+			});
 		}
 
 		if (priceLevel.orders.length === 0) {

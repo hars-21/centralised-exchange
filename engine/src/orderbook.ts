@@ -1,8 +1,10 @@
 import { publishEvent } from "./redis/publish";
 import { ORDERBOOK } from "./store";
-import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/domain";
+import type { Depth, OrderRecord, PriceLevel, RestingOrder, Side } from "./types/domain";
+import type { EventMessage } from "./types/event";
 
 let LastUpdateID = 1;
+let LastFillID = 1;
 
 export function getBestBid(symbol: string) {
 	const bids = ORDERBOOK[symbol]!.bids;
@@ -46,8 +48,12 @@ export function addOrderToBook(order: OrderRecord) {
 			orders: [order as RestingOrder],
 		};
 	}
-	const updatedPriceLevel = ORDERBOOK[order.symbol]![orderSide][order.price]!;
-	publishDepth(order.symbol, order.price, updatedPriceLevel, orderSide);
+	publishDepth({
+		symbol: order.symbol,
+		price: order.price,
+		qty: priceLevel?.totalQty ?? remainingQty,
+		side: orderSide,
+	});
 }
 
 export function removeOrderFromBook(order: OrderRecord) {
@@ -77,7 +83,12 @@ export function removeOrderFromBook(order: OrderRecord) {
 
 	ORDERBOOK[order.symbol]![orderSide][order.price] = priceLevel;
 
-	publishDepth(order.symbol, order.price, priceLevel, orderSide);
+	publishDepth({
+		symbol: order.symbol,
+		price: order.price,
+		qty: priceLevel.totalQty,
+		side: orderSide,
+	});
 
 	if (priceLevel.orders.length === 0) {
 		delete ORDERBOOK[order.symbol]![orderSide][order.price];
@@ -111,16 +122,22 @@ export function getDepth(symbol: string) {
 		symbol,
 		bids: bidsArr,
 		asks: asksArr,
+		lastUpdateId: LastUpdateID,
+		timestamp: Date.now(),
 	};
 }
 
-export function publishDepth(
-	symbol: string,
-	price: number,
-	pricelevel: PriceLevel,
-	side: "bids" | "asks",
-) {
-	const qty = pricelevel.totalQty;
+export function publishDepth({
+	symbol,
+	price,
+	qty,
+	side,
+}: {
+	symbol: string;
+	price: number;
+	qty: number;
+	side: "bids" | "asks";
+}) {
 	const depth: Depth = {
 		symbol,
 		bids: [],
@@ -129,7 +146,42 @@ export function publishDepth(
 
 	depth[side].push({ price, qty });
 
-	void publishEvent(depth, LastUpdateID++).catch((err) => {
+	const message: EventMessage = {
+		event: "depth",
+		lastUpdateId: LastUpdateID++,
+		timestamp: Date.now(),
+		...depth,
+	};
+
+	void publishEvent(message).catch((err) => {
 		console.error("Failed to publish depth", err);
+	});
+}
+
+export function publishFill({
+	symbol,
+	price,
+	qty,
+	side,
+	timestamp,
+}: {
+	symbol: string;
+	price: number;
+	qty: number;
+	side: Side;
+	timestamp: number;
+}) {
+	const message: EventMessage = {
+		event: "trade",
+		symbol,
+		price,
+		qty,
+		maker: side !== "BUY",
+		id: LastFillID++,
+		timestamp,
+	};
+
+	void publishEvent(message).catch((err) => {
+		console.error("Failed to publish trade", err);
 	});
 }
