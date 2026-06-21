@@ -1,4 +1,4 @@
-import type { Market, OrderRecord, UserBalance } from "./types/store";
+import type { Fill, Market, OrderRecord, UserBalance } from "./types/domain";
 
 // --- In-memory state ---
 /*
@@ -8,7 +8,7 @@ import type { Market, OrderRecord, UserBalance } from "./types/store";
 				available: 0,
 				locked: 0,
 			},
-			SOL_USD: {
+			SOL: {
 				available: 0,
 				locked: 0,
 			},
@@ -18,7 +18,7 @@ import type { Market, OrderRecord, UserBalance } from "./types/store";
 				available: 0,
 				locked: 0,
 			},
-			SOL_USD: {
+			SOL: {
 				available: 0,
 				locked: 0,
 			},
@@ -84,3 +84,18 @@ export const ORDERBOOK: Record<string, Market> = {
 	];
 */
 export const ORDERS: OrderRecord[] = [];
+
+/*
+	FILLS = [
+		{
+			fillId: "a4c96039-ba36-4491-8530-263c1e69f02e",
+			symbol: "SOL_USD",
+			price: 50,
+			qty: 10,
+			buyOrderId: "81dbd809-d762-4d34-9a86-2fdd635f917a",
+			sellOrderId: "9f592d5c-1856-4b72-9bcb-c19ef34408f9",
+			createdAt: 1782032853506,
+		},
+	];
+*/
+export const FILLS: Fill[] = [];

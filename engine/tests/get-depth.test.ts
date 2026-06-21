@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "bun:test";
 import { getDepth } from "../src/orderbook";
-import { cancelOrder, placeOrder } from "../src/engine";
+import { cancelOrder, placeOrder } from "../src/order";
 import { resetState } from "./utils";
 
 beforeEach(() => {

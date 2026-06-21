@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from "bun:test";
 import { getUserBalance } from "../src/balance";
 import { resetState } from "./utils";
-import { cancelOrder, placeOrder } from "../src/engine";
+import { cancelOrder, placeOrder } from "../src/order";
 
 beforeEach(() => {
 	resetState();

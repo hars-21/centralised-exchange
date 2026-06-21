@@ -1,6 +1,6 @@
-import { publishDepth } from "./redis/publish";
+import { publishEvent } from "./redis/publish";
 import { ORDERBOOK } from "./store";
-import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/store";
+import type { Depth, OrderRecord, PriceLevel, RestingOrder } from "./types/domain";
 
 let LastUpdateID = 1;
 
@@ -47,7 +47,7 @@ export function addOrderToBook(order: OrderRecord) {
 		};
 	}
 	const updatedPriceLevel = ORDERBOOK[order.symbol]![orderSide][order.price]!;
-	recordChanges(order.symbol, order.price, updatedPriceLevel, orderSide);
+	publishDepth(order.symbol, order.price, updatedPriceLevel, orderSide);
 }
 
 export function removeOrderFromBook(order: OrderRecord) {
@@ -77,7 +77,7 @@ export function removeOrderFromBook(order: OrderRecord) {
 
 	ORDERBOOK[order.symbol]![orderSide][order.price] = priceLevel;
 
-	recordChanges(order.symbol, order.price, priceLevel, orderSide);
+	publishDepth(order.symbol, order.price, priceLevel, orderSide);
 
 	if (priceLevel.orders.length === 0) {
 		delete ORDERBOOK[order.symbol]![orderSide][order.price];
@@ -114,7 +114,7 @@ export function getDepth(symbol: string) {
 	};
 }
 
-export function recordChanges(
+export function publishDepth(
 	symbol: string,
 	price: number,
 	pricelevel: PriceLevel,
@@ -129,7 +129,7 @@ export function recordChanges(
 
 	depth[side].push({ price, qty });
 
-	void publishDepth(depth, LastUpdateID++).catch((err) => {
+	void publishEvent(depth, LastUpdateID++).catch((err) => {
 		console.error("Failed to publish depth", err);
 	});
 }

@@ -1,5 +1,5 @@
 import { handleEngineRequest } from "./handler";
-import type { EngineRequest, EngineResponse } from "./types/engine";
+import type { EngineRequest, EngineResponse } from "./types/request";
 import { connectRedis, publisher, subscriber } from "./redis/client";
 import { env } from "./utils/env";
 

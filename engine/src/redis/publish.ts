@@ -1,7 +1,7 @@
 import { publisher } from "./client";
-import type { Depth } from "../types/store";
+import type { Depth } from "../types/domain";
 
-export async function publishDepth(message: Depth, lastUpdateId: number) {
+export async function publishEvent(message: Depth, lastUpdateId: number) {
 	if (!publisher.isOpen) {
 		return;
 	}

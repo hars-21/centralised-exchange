@@ -1,7 +1,7 @@
 import { getUserBalance } from "./balance";
-import { cancelOrder, getOpenOrders, getOrder, placeOrder } from "./engine";
+import { cancelOrder, getOpenOrders, getOrder, placeOrder } from "./order";
 import { getDepth } from "./orderbook";
-import type { EngineRequest } from "./types/engine";
+import type { EngineCommandType, EngineRequest } from "./types/request";
 import {
 	orderIdPayloadSchema,
 	orderPayloadSchema,
@@ -9,66 +9,50 @@ import {
 	userPayloadSchema,
 } from "./types/order";
 
+type Handler = (payload: Record<string, unknown>) => unknown;
+
+const handlers: Record<EngineCommandType, Handler> = {
+	create_order: (payload) => {
+		const parsed = orderPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid order payload");
+		return placeOrder(parsed.data);
+	},
+
+	get_depth: (payload) => {
+		const parsed = symbolPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid symbol");
+		return getDepth(parsed.data.symbol);
+	},
+
+	get_user_balance: (payload) => {
+		const parsed = userPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid userId");
+		return getUserBalance(parsed.data.userId);
+	},
+
+	get_order: (payload) => {
+		const parsed = orderIdPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid OrderId");
+		return getOrder(parsed.data.userId, parsed.data.orderId);
+	},
+
+	get_open_orders: (payload) => {
+		const parsed = userPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid userId");
+		return getOpenOrders(parsed.data.userId);
+	},
+
+	cancel_order: (payload) => {
+		const parsed = orderIdPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid OrderId");
+		return cancelOrder(parsed.data.userId, parsed.data.orderId);
+	},
+};
+
 export function handleEngineRequest(message: EngineRequest) {
-	if (message.type === "create_order") {
-		const parsedPayload = orderPayloadSchema.safeParse(message.payload);
+	const handler = handlers[message.type];
 
-		if (!parsedPayload.success) {
-			throw new Error("Invalid order payload");
-		}
+	if (!handler) throw new Error("Unknown message type");
 
-		return placeOrder(parsedPayload.data);
-	} else if (message.type === "get_depth") {
-		const parsedPayload = symbolPayloadSchema.safeParse(message.payload);
-
-		if (!parsedPayload.success) {
-			throw new Error("Invalid symbol");
-		}
-
-		const { symbol } = parsedPayload.data;
-
-		return getDepth(symbol);
-	} else if (message.type === "get_user_balance") {
-		const parsedPayload = userPayloadSchema.safeParse(message.payload);
-
-		if (!parsedPayload.success) {
-			throw new Error("Invalid userId");
-		}
-
-		const { userId } = parsedPayload.data;
-
-		return getUserBalance(userId);
-	} else if (message.type === "get_order") {
-		const parsedPayload = orderIdPayloadSchema.safeParse(message.payload);
-
-		if (!parsedPayload.success) {
-			throw new Error("Invalid OrderId");
-		}
-
-		const { userId, orderId } = parsedPayload.data;
-
-		return getOrder(userId, orderId);
-	} else if (message.type === "get_open_orders") {
-		const parsedPayload = userPayloadSchema.safeParse(message.payload);
-
-		if (!parsedPayload.success) {
-			throw new Error("Invalid userId");
-		}
-
-		const { userId } = parsedPayload.data;
-
-		return getOpenOrders(userId);
-	} else if (message.type === "cancel_order") {
-		const parsedPayload = orderIdPayloadSchema.safeParse(message.payload);
-
-		if (!parsedPayload.success) {
-			throw new Error("Invalid OrderId");
-		}
-
-		const { userId, orderId } = parsedPayload.data;
-
-		return cancelOrder(userId, orderId);
-	} else {
-		throw new Error("Unknown message type");
-	}
+	return handler(message.payload);
 }

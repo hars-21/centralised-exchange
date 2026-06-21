@@ -1,6 +1,6 @@
 import { getBestAsk, getBestBid } from "./orderbook";
 import { BALANCES, ORDERS } from "./store";
-import type { CreateOrderInput, OrderRecord, Fill, UserBalance } from "./types/store";
+import type { CreateOrderInput, OrderRecord, Fill, UserBalance } from "./types/domain";
 
 function ensureAsset(userId: string, asset: string) {
 	if (!BALANCES[userId]) {
@@ -70,14 +70,14 @@ export function lockBalance(order: CreateOrderInput): number {
 	}
 }
 
-export function settleTrades(fills: Fill[]) {
+export function settleFills(fills: Fill[]) {
 	for (const fill of fills) {
 		const { buyOrderId, sellOrderId, qty, price } = fill;
 
 		const buyOrder = ORDERS.find((o) => o.orderId === buyOrderId);
 		const sellOrder = ORDERS.find((o) => o.orderId === sellOrderId);
 
-		if (!buyOrder || !sellOrder) throw new Error("Invalid Trade");
+		if (!buyOrder || !sellOrder) throw new Error("Invalid trade");
 
 		const base = buyOrder.symbol.split("_")[0]!;
 
