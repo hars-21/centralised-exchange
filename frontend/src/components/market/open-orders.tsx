@@ -2,38 +2,38 @@ import { Inbox, X } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import type { OrderRecord } from "@/types";
+import { api } from "@/lib/api";
 
-export function OpenOrders({ loading }: { loading?: boolean }) {
+interface OpenOrdersProps {
+	loading?: boolean;
+	refreshKey?: number;
+}
+
+export function OpenOrders({ loading, refreshKey }: OpenOrdersProps) {
 	const [orders, setOrders] = useState<OrderRecord[]>([]);
+	const [cancelling, setCancelling] = useState<string | null>(null);
 
 	const fetchOpenOrders = async () => {
 		try {
-			const res = await fetch("http://localhost:8000/orders/open", {
-				credentials: "include",
-			});
-
-			const data = await res.json();
+			const data = await api.getOpenOrders();
 			setOrders(data);
-		} catch (e) {
-			console.error(e);
-		}
+		} catch {}
 	};
 
 	const handleCancel = async (orderId: string) => {
+		setCancelling(orderId);
 		try {
-			await fetch(`http://localhost:8000/orders/${orderId}`, {
-				method: "DELETE",
-				credentials: "include",
-			});
-			fetchOpenOrders();
-		} catch (e) {
-			console.error(e);
+			await api.cancelOrder(orderId);
+			await fetchOpenOrders();
+		} catch {
+		} finally {
+			setCancelling(null);
 		}
 	};
 
 	useEffect(() => {
 		fetchOpenOrders();
-	}, []);
+	}, [refreshKey]);
 
 	if (loading) {
 		return (
@@ -107,6 +107,11 @@ export function OpenOrders({ loading }: { loading?: boolean }) {
 				<h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 					Open Orders
 				</h2>
+				{orders.length > 0 && (
+					<span className="text-[10px] font-mono text-muted-foreground/60">
+						{orders.length} order{orders.length !== 1 ? "s" : ""}
+					</span>
+				)}
 			</div>
 
 			<div className="overflow-auto flex-1 min-h-0">
@@ -147,13 +152,15 @@ export function OpenOrders({ loading }: { loading?: boolean }) {
 										{order.symbol.replace("_", "/")}
 									</td>
 									<td
-										className={`px-5 py-3 font-mono text-[11px] font-medium ${order.side === "BUY" ? "text-green-500" : "text-red-500"}`}
+										className={`px-5 py-3 font-mono text-[11px] font-medium ${
+											order.side === "BUY" ? "text-success" : "text-destructive"
+										}`}
 									>
 										{order.side}
 									</td>
 									<td className="px-5 py-3 font-mono text-[11px]">{order.type}</td>
 									<td className="px-5 py-3 font-mono text-[11px] text-right">
-										{order.price?.toFixed(2) ?? "-"}
+										{order.price?.toFixed(2) ?? "—"}
 									</td>
 									<td className="px-5 py-3 font-mono text-[11px] text-right">{order.qty}</td>
 									<td className="px-5 py-3 font-mono text-[11px] text-right">
@@ -168,7 +175,8 @@ export function OpenOrders({ loading }: { loading?: boolean }) {
 									<td className="px-5 py-3 text-right">
 										<button
 											onClick={() => handleCancel(order.orderId)}
-											className="inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+											disabled={cancelling === order.orderId}
+											className="inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
 										>
 											<X className="h-3.5 w-3.5" />
 										</button>

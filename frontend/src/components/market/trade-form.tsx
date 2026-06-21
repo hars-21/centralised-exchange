@@ -5,13 +5,27 @@ import { Label } from "../ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "../ui/skeleton";
+import { api } from "@/lib/api";
+import { CheckCircle, AlertCircle } from "lucide-react";
 
-export function TradeForm({ symbol }: { symbol: string }) {
+type FeedbackState =
+	| { type: "success"; message: string }
+	| { type: "error"; message: string }
+	| null;
+
+interface TradeFormProps {
+	symbol: string;
+	onOrderPlaced?: () => void;
+}
+
+export function TradeForm({ symbol, onOrderPlaced }: TradeFormProps) {
 	const [side, setSide] = useState<"BUY" | "SELL">("BUY");
 	const [orderType, setOrderType] = useState<"LIMIT" | "MARKET">("LIMIT");
 	const [price, setPrice] = useState("");
 	const [quantity, setQuantity] = useState("");
-	const { user, loading } = useAuth();
+	const [submitting, setSubmitting] = useState(false);
+	const [feedback, setFeedback] = useState<FeedbackState>(null);
+	const { user, loading, refreshUser } = useAuth();
 
 	if (loading) {
 		return (
@@ -34,26 +48,53 @@ export function TradeForm({ symbol }: { symbol: string }) {
 
 	const handlePlaceOrder = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (!quantity || Number(quantity) <= 0) {
+			setFeedback({ type: "error", message: "Enter a valid quantity" });
+			return;
+		}
+		if (orderType === "LIMIT" && (!price || Number(price) <= 0)) {
+			setFeedback({ type: "error", message: "Enter a valid price for limit orders" });
+			return;
+		}
+
+		setSubmitting(true);
+		setFeedback(null);
 
 		try {
-			const res = await fetch("http://localhost:8000/orders", {
-				method: "POST",
-				credentials: "include",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					side,
-					type: orderType,
-					symbol,
-					price: price ? Number(price) : null,
-					qty: Number(quantity),
-				}),
-			});
+			const result = await api.createOrder(
+				side,
+				orderType,
+				symbol,
+				Number(quantity),
+				orderType === "LIMIT" ? Number(price) : null,
+			);
 
-			const data = await res.json();
-		} catch (e) {
-			console.error(e);
+			const statusMsg =
+				result.status === "FILLED"
+					? `Filled at avg. ${result.averagePrice?.toFixed(2) ?? "—"}`
+					: result.status === "PARTIALLY_FILLED"
+						? `Partially filled (${result.filledQty}/${Number(quantity)})`
+						: "Order placed successfully";
+
+			setFeedback({ type: "success", message: statusMsg });
+			setPrice("");
+			setQuantity("");
+
+			await refreshUser();
+			onOrderPlaced?.();
+
+			setTimeout(() => setFeedback(null), 4000);
+		} catch (err) {
+			setFeedback({
+				type: "error",
+				message: err instanceof Error ? err.message : "Order failed",
+			});
+		} finally {
+			setSubmitting(false);
 		}
 	};
+
+	const base = symbol.split("_")[0];
 
 	return (
 		<div className="flex h-full flex-col select-none">
@@ -89,8 +130,8 @@ export function TradeForm({ symbol }: { symbol: string }) {
 								<span className="text-muted-foreground">Available Balance</span>
 								<span className="font-mono text-foreground font-semibold">
 									{side === "BUY"
-										? `${user?.balance.USD?.available ?? 0} USD`
-										: `${user?.balance[symbol.split("_")[0]!]?.available ?? 0} ${symbol.split("_")[0]}`}
+										? `${user?.balance.USD?.available.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? 0} USD`
+										: `${user?.balance[base!]?.available.toLocaleString(undefined, { maximumFractionDigits: 8 }) ?? 0} ${base}`}
 								</span>
 							</div>
 
@@ -174,13 +215,30 @@ export function TradeForm({ symbol }: { symbol: string }) {
 										className="font-mono pr-12 text-sm h-10"
 									/>
 									<div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/80 tracking-wider">
-										{symbol.split("_")[0]}
+										{base}
 									</div>
 								</div>
 							</div>
 						</div>
 
 						<div className="space-y-4 pt-4 border-t border-border/40">
+							{feedback && (
+								<div
+									className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
+										feedback.type === "success"
+											? "bg-success/10 text-success border border-success/20"
+											: "bg-destructive/10 text-destructive border border-destructive/20"
+									}`}
+								>
+									{feedback.type === "success" ? (
+										<CheckCircle className="h-3.5 w-3.5 shrink-0" />
+									) : (
+										<AlertCircle className="h-3.5 w-3.5 shrink-0" />
+									)}
+									{feedback.message}
+								</div>
+							)}
+
 							{orderType === "LIMIT" && price && quantity && (
 								<div className="flex justify-between items-center text-xs">
 									<span className="text-muted-foreground">Est. Total</span>
@@ -196,13 +254,18 @@ export function TradeForm({ symbol }: { symbol: string }) {
 
 							<Button
 								type="submit"
+								disabled={submitting}
 								className={`w-full py-5 text-xs font-semibold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
 									side === "BUY"
 										? "bg-success hover:bg-success/90 text-white shadow-sm shadow-success/15"
 										: "bg-destructive hover:bg-destructive/90 text-white shadow-sm shadow-destructive/15"
 								}`}
 							>
-								{side === "BUY" ? "Place Buy Order" : "Place Sell Order"}
+								{submitting
+									? "Placing..."
+									: side === "BUY"
+										? "Place Buy Order"
+										: "Place Sell Order"}
 							</Button>
 						</div>
 					</form>

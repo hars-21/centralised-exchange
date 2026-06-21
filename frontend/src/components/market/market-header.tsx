@@ -10,6 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { COIN_LOGOS } from "@/utils/misc";
+import { api } from "@/lib/api";
 
 interface MarketHeaderProps {
 	market: string;
@@ -22,8 +23,8 @@ export function MarketHeader({ market }: MarketHeaderProps) {
 	const [base, quote] = market.split("_") as [string, string];
 
 	useEffect(() => {
-		fetch("http://localhost:8000/markets")
-			.then((r) => r.json())
+		api
+			.getMarkets()
 			.then((res) => setMarkets(res.data ?? []))
 			.catch(() => {});
 	}, []);

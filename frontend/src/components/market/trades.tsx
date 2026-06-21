@@ -1,6 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import type { Trade } from "@/types";
+import { api } from "@/lib/api";
+import { wsManager } from "@/lib/ws";
 
 function formatTime(ts: number) {
 	const d = new Date(ts);
@@ -9,13 +11,12 @@ function formatTime(ts: number) {
 
 export function Trades({ symbol, loading }: { symbol: string; loading?: boolean }) {
 	const [trades, setTrades] = useState<Trade[]>([]);
-	const wsRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
 		setTrades([]);
 
-		fetch(`http://localhost:8000/markets/${symbol}/trades`)
-			.then((r) => r.json())
+		api
+			.getTrades(symbol)
 			.then((data) => {
 				const mapped = (Array.isArray(data) ? data : []).map((f: any) => ({
 					id: f.fillId,
@@ -28,25 +29,16 @@ export function Trades({ symbol, loading }: { symbol: string; loading?: boolean 
 			})
 			.catch(() => {});
 
-		const ws = new WebSocket("ws://localhost:8080");
-		wsRef.current = ws;
-
-		ws.onopen = () => {
-			ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`trade:${symbol}`] }));
+		const handleTrade = (msg: any) => {
+			if (msg.event === "trade") {
+				setTrades((prev) => [{ ...msg, maker: msg.maker }, ...prev].slice(0, 50));
+			}
 		};
 
-		ws.onmessage = (msg) => {
-			try {
-				const parsed = JSON.parse(msg.data);
-				if (parsed.event === "trade") {
-					setTrades((prev) => [{ ...parsed, maker: parsed.maker }, ...prev].slice(0, 50));
-				}
-			} catch {}
-		};
+		const unsubscribe = wsManager.subscribe(`trade:${symbol}`, handleTrade);
 
 		return () => {
-			ws.close();
-			wsRef.current = null;
+			unsubscribe();
 		};
 	}, [symbol]);
 

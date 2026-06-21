@@ -6,37 +6,29 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export function LoginPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
-	const { setUser } = useAuth();
+	const [isLoading, setIsLoading] = useState(false);
+	const { refreshUser } = useAuth();
 	const navigate = useNavigate();
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
+		setIsLoading(true);
 
 		try {
-			const res = await fetch("http://localhost:8000/signin", {
-				method: "POST",
-				credentials: "include",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ username, password }),
-			});
-
-			const data = await res.json();
-
-			if (!res.ok) {
-				setError(data.message || data.error || "Login failed");
-				return;
-			}
-
-			setUser({ id: data.id, username: data.username, balance: data.balance || {} });
+			await api.signin(username, password);
+			await refreshUser();
 			navigate("/");
 		} catch (e) {
-			setError("Network error. Please try again.");
+			setError(e instanceof Error ? e.message : "Login failed");
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -73,8 +65,8 @@ export function LoginPage() {
 								placeholder="Enter your password"
 							/>
 						</div>
-						<Button type="submit" className="w-full">
-							Log in
+						<Button type="submit" className="w-full" disabled={isLoading}>
+							{isLoading ? "Logging in..." : "Log in"}
 						</Button>
 					</form>
 					<p className="mt-4 text-center text-sm text-muted-foreground">

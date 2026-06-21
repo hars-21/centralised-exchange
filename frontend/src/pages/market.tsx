@@ -6,117 +6,94 @@ import { Trades } from "../components/market/trades";
 import { TradeForm } from "../components/market/trade-form";
 import { OpenOrders } from "../components/market/open-orders";
 import { Button } from "../components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "../components/ui/skeleton";
 import type { DepthLevel, OrderBook, StreamResponse } from "@/types";
+import { api } from "@/lib/api";
+import { wsManager } from "@/lib/ws";
 
 export function MarketPage() {
 	const { symbol = "BTC_USD" } = useParams();
 	const { user, loading: authLoading } = useAuth();
 	const [loading, setLoading] = useState(true);
+	const [orderbookRefreshKey, setOrderbookRefreshKey] = useState(0);
 
 	const [orderbook, setOrderbook] = useState<OrderBook>({
 		bids: {},
 		asks: {},
 	});
-	const buffer: StreamResponse[] = [];
+	const bufferRef = useRef<StreamResponse[]>([]);
 	const [leftTab, setLeftTab] = useState<"book" | "trades">("book");
 
 	useEffect(() => {
-		const streamDepth = async () => {
-			try {
-				let orderbookInitialized = false;
-				const ws = new WebSocket("ws://localhost:8080");
-				ws.onmessage = (msg) => {
-					const parsedMessage = JSON.parse(msg.data);
+		setLoading(true);
+		setOrderbook({ bids: {}, asks: {} });
+		bufferRef.current = [];
 
-					const { lastUpdateId, bids, asks } = parsedMessage;
+		let orderbookInitialized = false;
 
-					if (!orderbookInitialized) {
-						buffer.push({ bids, asks, lastUpdateId });
-					} else {
-						updateOrderbook(bids, asks);
-					}
-				};
-
-				ws.onopen = async () => {
-					try {
-						ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`depth:${symbol}`] }));
-
-						const res = await fetch(`http://localhost:8000/markets/${symbol}/depth`);
-						const { lastUpdateId, bids, asks } = await res.json();
-
-						initializeOrderbook(bids, asks);
-						orderbookInitialized = true;
-
-						buffer.forEach((msg) => {
-							if (msg.lastUpdateId < lastUpdateId) {
-								updateOrderbook(msg.bids, msg.asks);
-							}
-						});
-					} catch (e) {
-						console.error(e);
-					}
-				};
-
-				ws.onclose = () => {
-					ws.send(JSON.stringify({ method: "UNSUBSCRIBE", params: [`depth:${symbol}`] }));
-				};
-			} catch (e) {
-				console.error(e);
-			} finally {
-				setLoading(false);
+		const handleDepth = (raw: unknown) => {
+			const data = raw as StreamResponse;
+			if (!orderbookInitialized) {
+				bufferRef.current.push(data);
+			} else {
+				updateOrderbook(data.bids, data.asks);
 			}
 		};
 
-		streamDepth();
-	}, []);
+		const unsubscribe = wsManager.subscribe(`depth:${symbol}`, handleDepth);
+
+		api
+			.getDepth(symbol)
+			.then(({ bids, asks, lastUpdateId }) => {
+				initializeOrderbook(bids, asks);
+				orderbookInitialized = true;
+				bufferRef.current.forEach((msg) => {
+					if (msg.lastUpdateId > lastUpdateId) {
+						updateOrderbook(msg.bids, msg.asks);
+					}
+				});
+				bufferRef.current = [];
+			})
+			.catch(() => {})
+			.finally(() => setLoading(false));
+
+		return () => {
+			unsubscribe();
+		};
+	}, [symbol]);
 
 	const initializeOrderbook = (bids: DepthLevel[], asks: DepthLevel[]) => {
 		const bidsMap: Record<number, number> = {};
 		const asksMap: Record<number, number> = {};
-
 		bids.forEach(({ price, qty }) => {
 			bidsMap[price] = qty;
 		});
-
 		asks.forEach(({ price, qty }) => {
 			asksMap[price] = qty;
 		});
-
-		setOrderbook({
-			bids: bidsMap,
-			asks: asksMap,
-		});
+		setOrderbook({ bids: bidsMap, asks: asksMap });
 	};
 
 	const updateOrderbook = (updatedBids: DepthLevel[], updatedAsks: DepthLevel[]) => {
 		setOrderbook((prev) => {
 			const bids = { ...prev.bids };
 			const asks = { ...prev.asks };
-
 			updatedBids.forEach(({ price, qty }) => {
-				if (qty === 0) {
-					delete bids[price];
-				} else {
-					bids[price] = qty;
-				}
+				if (qty === 0) delete bids[price];
+				else bids[price] = qty;
 			});
-
 			updatedAsks.forEach(({ price, qty }) => {
-				if (qty === 0) {
-					delete asks[price];
-				} else {
-					asks[price] = qty;
-				}
+				if (qty === 0) delete asks[price];
+				else asks[price] = qty;
 			});
-
-			return {
-				bids,
-				asks,
-			};
+			return { bids, asks };
 		});
+	};
+
+	const handleOrderPlaced = () => {
+		setOrderbookRefreshKey((k) => k + 1);
 	};
 
 	const isDataLoading = loading || authLoading;
@@ -193,13 +170,13 @@ export function MarketPage() {
 						)}
 
 						<div className="bg-card rounded-xl border border-border/40 shadow-xs overflow-hidden h-55 shrink-0">
-							<OpenOrders loading={isDataLoading} />
+							<OpenOrders loading={isDataLoading} refreshKey={orderbookRefreshKey} />
 						</div>
 					</div>
 
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
 						{user ? (
-							<TradeForm symbol={symbol} />
+							<TradeForm symbol={symbol} onOrderPlaced={handleOrderPlaced} />
 						) : (
 							<div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
 								<p className="text-sm text-muted-foreground">Sign in to start trading</p>

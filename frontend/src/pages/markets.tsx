@@ -6,14 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import type { Market } from "@/types";
 import { ASSET_NAMES, COIN_LOGOS } from "@/utils/misc";
+import { api } from "@/lib/api";
 
 export function MarketsPage() {
 	const [markets, setMarkets] = useState<Market[]>([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		fetch("http://localhost:8000/markets")
-			.then((r) => r.json())
+		api
+			.getMarkets()
 			.then((res) => setMarkets(res.data ?? []))
 			.catch(() => {})
 			.finally(() => setLoading(false));

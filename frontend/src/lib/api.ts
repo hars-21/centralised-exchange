@@ -1,0 +1,79 @@
+import type { CancelResult, DepthSnapshot, Fill, OrderResult, UserData } from "@/types/api";
+import { env } from "./env";
+import type { Market, OrderRecord, UserBalance } from "@/types";
+
+const BASE = env.apiBaseUrl;
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+	const res = await fetch(`${BASE}${path}`, {
+		credentials: "include",
+		headers: { "Content-Type": "application/json", ...options.headers },
+		...options,
+	});
+
+	const data = await res.json();
+
+	if (!res.ok) {
+		const message = data?.error || data?.message || `Request failed: ${res.status}`;
+		throw new Error(message);
+	}
+
+	return data as T;
+}
+
+export const api = {
+	getMe(): Promise<UserData> {
+		return request<UserData>("/me");
+	},
+
+	signin(username: string, password: string): Promise<{ userId: string; username: string }> {
+		return request<{ userId: string; username: string }>("/signin", {
+			method: "POST",
+			body: JSON.stringify({ username, password }),
+		});
+	},
+
+	signup(username: string, password: string): Promise<{ userId: string; username: string }> {
+		return request<{ userId: string; username: string }>("/signup", {
+			method: "POST",
+			body: JSON.stringify({ username, password }),
+		});
+	},
+
+	getMarkets(): Promise<{ data: Market[] }> {
+		return request<{ data: Market[] }>("/markets");
+	},
+
+	getDepth(symbol: string): Promise<DepthSnapshot> {
+		return request<DepthSnapshot>(`/markets/${symbol}/depth`);
+	},
+
+	getTrades(symbol: string): Promise<Fill[]> {
+		return request<Fill[]>(`/markets/${symbol}/trades`);
+	},
+
+	getBalance(): Promise<UserBalance> {
+		return request<UserBalance>("/balances");
+	},
+
+	getOpenOrders(): Promise<OrderRecord[]> {
+		return request<OrderRecord[]>("/orders/open");
+	},
+
+	createOrder(
+		side: "BUY" | "SELL",
+		type: "LIMIT" | "MARKET",
+		symbol: string,
+		qty: number,
+		price?: number | null,
+	): Promise<OrderResult> {
+		return request<OrderResult>("/orders", {
+			method: "POST",
+			body: JSON.stringify({ side, type, symbol, qty, price: price ?? null }),
+		});
+	},
+
+	cancelOrder(orderId: string): Promise<CancelResult> {
+		return request<CancelResult>(`/orders/${orderId}`, { method: "DELETE" });
+	},
+};
