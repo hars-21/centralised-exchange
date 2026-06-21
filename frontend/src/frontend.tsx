@@ -5,6 +5,7 @@ import { App } from "./App";
 
 import { ThemeProvider } from "./lib/theme-provider";
 import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "./components/ui/sonner";
 
 const elem = document.getElementById("root")!;
 const app = (
@@ -13,6 +14,7 @@ const app = (
 			<BrowserRouter>
 				<AuthProvider>
 					<App />
+					<Toaster />
 				</AuthProvider>
 			</BrowserRouter>
 		</ThemeProvider>

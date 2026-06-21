@@ -9,6 +9,7 @@ import Loader from "@/components/ui/loader";
 import { ASSET_NAMES, COIN_LOGOS } from "@/utils/misc";
 import type { OrderRecord } from "@/types";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export function ProfilePage() {
 	const { user, setUser, loading, refreshUser } = useAuth();
@@ -30,6 +31,7 @@ export function ProfilePage() {
 
 	const handleLogout = () => {
 		setUser(null);
+		toast.success("Logged out successfully");
 	};
 
 	return (

@@ -3,6 +3,7 @@ import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import type { OrderRecord } from "@/types";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 interface OpenOrdersProps {
 	loading?: boolean;
@@ -24,8 +25,10 @@ export function OpenOrders({ loading, refreshKey }: OpenOrdersProps) {
 		setCancelling(orderId);
 		try {
 			await api.cancelOrder(orderId);
+			toast.success("Order cancelled successfully");
 			await fetchOpenOrders();
-		} catch {
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to cancel order");
 		} finally {
 			setCancelling(null);
 		}

@@ -7,26 +7,31 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export function SignupPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const { refreshUser } = useAuth();
 	const navigate = useNavigate();
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError("");
+		if (!username.trim() || !password.trim()) {
+			toast.error("Please enter both username and password");
+			return;
+		}
+
 		setIsLoading(true);
 
 		try {
 			await api.signup(username, password);
 			await refreshUser();
+			toast.success("Account created successfully");
 			navigate("/");
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Signup failed");
+			toast.error(e instanceof Error ? e.message : "Signup failed");
 		} finally {
 			setIsLoading(false);
 		}
@@ -40,11 +45,6 @@ export function SignupPage() {
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSignup} className="space-y-4">
-						{error && (
-							<div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
-								{error}
-							</div>
-						)}
 						<div className="space-y-2">
 							<Label htmlFor="username">Username</Label>
 							<Input

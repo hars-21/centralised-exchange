@@ -6,12 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "../ui/skeleton";
 import { api } from "@/lib/api";
-import { CheckCircle, AlertCircle } from "lucide-react";
-
-type FeedbackState =
-	| { type: "success"; message: string }
-	| { type: "error"; message: string }
-	| null;
+import { toast } from "sonner";
 
 interface TradeFormProps {
 	symbol: string;
@@ -24,7 +19,6 @@ export function TradeForm({ symbol, onOrderPlaced }: TradeFormProps) {
 	const [price, setPrice] = useState("");
 	const [quantity, setQuantity] = useState("");
 	const [submitting, setSubmitting] = useState(false);
-	const [feedback, setFeedback] = useState<FeedbackState>(null);
 	const { user, loading, refreshUser } = useAuth();
 
 	if (loading) {
@@ -49,16 +43,15 @@ export function TradeForm({ symbol, onOrderPlaced }: TradeFormProps) {
 	const handlePlaceOrder = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!quantity || Number(quantity) <= 0) {
-			setFeedback({ type: "error", message: "Enter a valid quantity" });
+			toast.error("Enter a valid quantity");
 			return;
 		}
 		if (orderType === "LIMIT" && (!price || Number(price) <= 0)) {
-			setFeedback({ type: "error", message: "Enter a valid price for limit orders" });
+			toast.error("Enter a valid price for limit orders");
 			return;
 		}
 
 		setSubmitting(true);
-		setFeedback(null);
 
 		try {
 			const result = await api.createOrder(
@@ -76,19 +69,14 @@ export function TradeForm({ symbol, onOrderPlaced }: TradeFormProps) {
 						? `Partially filled (${result.filledQty}/${Number(quantity)})`
 						: "Order placed successfully";
 
-			setFeedback({ type: "success", message: statusMsg });
+			toast.success(statusMsg);
 			setPrice("");
 			setQuantity("");
 
 			await refreshUser();
 			onOrderPlaced?.();
-
-			setTimeout(() => setFeedback(null), 4000);
 		} catch (err) {
-			setFeedback({
-				type: "error",
-				message: err instanceof Error ? err.message : "Order failed",
-			});
+			toast.error(err instanceof Error ? err.message : "Order failed");
 		} finally {
 			setSubmitting(false);
 		}
@@ -222,23 +210,6 @@ export function TradeForm({ symbol, onOrderPlaced }: TradeFormProps) {
 						</div>
 
 						<div className="space-y-4 pt-4 border-t border-border/40">
-							{feedback && (
-								<div
-									className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
-										feedback.type === "success"
-											? "bg-success/10 text-success border border-success/20"
-											: "bg-destructive/10 text-destructive border border-destructive/20"
-									}`}
-								>
-									{feedback.type === "success" ? (
-										<CheckCircle className="h-3.5 w-3.5 shrink-0" />
-									) : (
-										<AlertCircle className="h-3.5 w-3.5 shrink-0" />
-									)}
-									{feedback.message}
-								</div>
-							)}
-
 							{orderType === "LIMIT" && price && quantity && (
 								<div className="flex justify-between items-center text-xs">
 									<span className="text-muted-foreground">Est. Total</span>

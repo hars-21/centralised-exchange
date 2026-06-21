@@ -4,6 +4,7 @@ import { Menu, X, Sun, Moon, User, LogOut, TrendingUp, Activity } from "lucide-r
 import { useState } from "react";
 import { useTheme } from "../lib/theme-provider";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -22,6 +23,7 @@ export function Navbar() {
 
 	const handleLogout = () => {
 		setUser(null);
+		toast.success("Logged out successfully");
 		navigate("/");
 	};
 
