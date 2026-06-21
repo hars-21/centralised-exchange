@@ -1,17 +1,11 @@
 import { Navigate } from "react-router-dom";
-import { AppLayout } from "../components/app-layout";
+import { AppLayout } from "@/components/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/ui/loader";
-
-const ASSET_NAMES: Record<string, string> = {
-	USD: "US Dollar",
-	BTC: "Bitcoin",
-	ETH: "Ethereum",
-	SOL: "Solana",
-};
+import { ASSET_NAMES, COIN_LOGOS } from "@/utils/misc";
 
 export function ProfilePage() {
 	const { user, setUser, loading } = useAuth();
@@ -72,11 +66,24 @@ export function ProfilePage() {
 										key={currency}
 										className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
 									>
-										<div className="flex flex-col">
-											<span className="font-semibold text-foreground">{currency}</span>
-											<span className="text-[10px] text-muted-foreground font-medium">
-												{ASSET_NAMES[currency] || currency}
-											</span>
+										<div className="flex items-center gap-3">
+											{COIN_LOGOS[currency] ? (
+												<img
+													src={COIN_LOGOS[currency]}
+													alt={currency}
+													className="h-7 w-7 object-contain shrink-0"
+												/>
+											) : (
+												<div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase shrink-0">
+													{currency[0]}
+												</div>
+											)}
+											<div className="flex flex-col">
+												<span className="font-semibold text-foreground">{currency}</span>
+												<span className="text-[10px] text-muted-foreground font-medium">
+													{ASSET_NAMES[currency] || currency}
+												</span>
+											</div>
 										</div>
 										<span className="font-mono text-foreground font-semibold">
 											{bal.available.toLocaleString(undefined, {
