@@ -94,6 +94,7 @@ export const ORDERS: OrderRecord[] = [];
 			qty: 10,
 			buyOrderId: "81dbd809-d762-4d34-9a86-2fdd635f917a",
 			sellOrderId: "9f592d5c-1856-4b72-9bcb-c19ef34408f9",
+			isBuyerMaker: true,
 			createdAt: 1782032853506,
 		},
 	];

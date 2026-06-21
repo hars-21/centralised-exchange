@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { AppLayout } from "../components/app-layout";
 import { MarketHeader } from "../components/market/market-header";
 import { Orderbook } from "../components/market/orderbook";
+import { Trades } from "../components/market/trades";
 import { TradeForm } from "../components/market/trade-form";
 import { OpenOrders } from "../components/market/open-orders";
 import { Button } from "../components/ui/button";
@@ -20,6 +21,7 @@ export function MarketPage() {
 		asks: {},
 	});
 	const buffer: StreamResponse[] = [];
+	const [leftTab, setLeftTab] = useState<"book" | "trades">("book");
 
 	useEffect(() => {
 		const streamDepth = async () => {
@@ -126,12 +128,39 @@ export function MarketPage() {
 
 				<div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 					<div className="flex flex-col bg-card rounded-xl border border-border/40 shadow-xs lg:w-72 xl:w-80 shrink-0 h-full overflow-hidden">
-						<Orderbook
-							bids={orderbook.bids}
-							asks={orderbook.asks}
-							loading={isDataLoading}
-							symbol={symbol}
-						/>
+						<div className="flex border-b border-border/40">
+							<button
+								onClick={() => setLeftTab("book")}
+								className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+									leftTab === "book"
+										? "text-foreground border-b-2 border-primary"
+										: "text-muted-foreground/60 hover:text-foreground"
+								}`}
+							>
+								Orderbook
+							</button>
+							<button
+								onClick={() => setLeftTab("trades")}
+								className={`flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+									leftTab === "trades"
+										? "text-foreground border-b-2 border-primary"
+										: "text-muted-foreground/60 hover:text-foreground"
+								}`}
+							>
+								Trades
+							</button>
+						</div>
+
+						{leftTab === "book" ? (
+							<Orderbook
+								bids={orderbook.bids}
+								asks={orderbook.asks}
+								loading={isDataLoading}
+								symbol={symbol}
+							/>
+						) : (
+							<Trades symbol={symbol} loading={isDataLoading} />
+						)}
 					</div>
 
 					<div className="flex flex-1 flex-col gap-4 h-full min-w-0">

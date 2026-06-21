@@ -47,6 +47,7 @@ export interface Fill {
 	qty: number;
 	buyOrderId: string;
 	sellOrderId: string;
+	isBuyerMaker: boolean;
 	createdAt: number;
 }
 

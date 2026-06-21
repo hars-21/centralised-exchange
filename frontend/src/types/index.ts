@@ -41,3 +41,17 @@ export interface OrderRecord {
 	status: string;
 	createdAt: number;
 }
+
+export interface Trade {
+	id: number;
+	price: number;
+	qty: number;
+	maker: boolean;
+	timestamp: number;
+}
+
+export interface Market {
+	id: string;
+	symbol: string;
+	name: string;
+}

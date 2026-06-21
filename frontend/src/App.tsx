@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/login";
 import { SignupPage } from "./pages/signup";
 import { ProfilePage } from "./pages/profile";
 import { MarketPage } from "./pages/market";
+import { MarketsPage } from "./pages/markets";
 
 function NotFound() {
 	return (
@@ -23,6 +24,7 @@ export function App() {
 			<Route path="/login" element={<LoginPage />} />
 			<Route path="/signup" element={<SignupPage />} />
 			<Route path="/profile" element={<ProfilePage />} />
+			<Route path="/markets" element={<MarketsPage />} />
 			<Route path="/market/:symbol" element={<MarketPage />} />
 			<Route path="*" element={<NotFound />} />
 		</Routes>

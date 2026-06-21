@@ -28,10 +28,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 						</Link>
 						<nav className="flex items-center gap-5 text-sm">
 							<Link
+								to="/markets"
+								className={`transition-colors hover:text-foreground ${isActive("/markets")}`}
+							>
+								Markets
+							</Link>
+							<Link
 								to="/market/BTC_USD"
 								className={`transition-colors hover:text-foreground ${isActive("/market")}`}
 							>
-								Market
+								Trading
 							</Link>
 						</nav>
 					</div>

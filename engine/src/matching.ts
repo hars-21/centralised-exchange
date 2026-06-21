@@ -1,6 +1,6 @@
 import { addOrderToBook, getBestAsk, getBestBid, publishDepth, publishFill } from "./orderbook";
 import { FILLS, ORDERBOOK } from "./store";
-import type { OrderRecord } from "./types/domain";
+import type { Fill, OrderRecord } from "./types/domain";
 
 export function matchOrder(order: OrderRecord) {
 	let remainingQty = order.qty - order.filledQty;
@@ -43,13 +43,14 @@ export function matchOrder(order: OrderRecord) {
 				restingOrder.status =
 					restingOrder.qty === restingOrder.filledQty ? "FILLED" : "PARTIALLY_FILLED";
 
-				const fill = {
+				const fill: Fill = {
 					fillId: crypto.randomUUID(),
 					symbol: order.symbol,
 					price: bestPrice,
 					qty: availableQty,
 					buyOrderId,
 					sellOrderId,
+					isBuyerMaker: order.side !== "BUY",
 					createdAt: Date.now(),
 				};
 
@@ -64,7 +65,7 @@ export function matchOrder(order: OrderRecord) {
 					symbol: fill.symbol,
 					price: fill.price,
 					qty: fill.qty,
-					side: order.side,
+					maker: fill.isBuyerMaker,
 					timestamp: fill.createdAt,
 				});
 			} else {
@@ -76,13 +77,14 @@ export function matchOrder(order: OrderRecord) {
 				restingOrder.status =
 					restingOrder.qty === restingOrder.filledQty ? "FILLED" : "PARTIALLY_FILLED";
 
-				const fill = {
+				const fill: Fill = {
 					fillId: crypto.randomUUID(),
 					symbol: order.symbol,
 					price: bestPrice,
 					qty: remainingQty,
 					buyOrderId,
 					sellOrderId,
+					isBuyerMaker: order.side !== "BUY",
 					createdAt: Date.now(),
 				};
 
@@ -96,7 +98,7 @@ export function matchOrder(order: OrderRecord) {
 					symbol: fill.symbol,
 					price: fill.price,
 					qty: fill.qty,
-					side: order.side,
+					maker: fill.isBuyerMaker,
 					timestamp: fill.createdAt,
 				});
 			}

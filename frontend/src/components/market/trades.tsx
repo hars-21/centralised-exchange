@@ -1,0 +1,103 @@
+import { useEffect, useState, useRef } from "react";
+import { Skeleton } from "../ui/skeleton";
+import type { Trade } from "@/types";
+
+function formatTime(ts: number) {
+	const d = new Date(ts);
+	return d.toLocaleTimeString("en-US", { hour12: false });
+}
+
+export function Trades({ symbol, loading }: { symbol: string; loading?: boolean }) {
+	const [trades, setTrades] = useState<Trade[]>([]);
+	const wsRef = useRef<WebSocket | null>(null);
+
+	useEffect(() => {
+		setTrades([]);
+
+		fetch(`http://localhost:8000/markets/${symbol}/trades`)
+			.then((r) => r.json())
+			.then((data) => {
+				const mapped = (Array.isArray(data) ? data : []).map((f: any) => ({
+					id: f.fillId,
+					price: f.price,
+					qty: f.qty,
+					maker: f.isBuyerMaker ?? null,
+					timestamp: f.createdAt,
+				}));
+				setTrades(mapped);
+			})
+			.catch(() => {});
+
+		const ws = new WebSocket("ws://localhost:8080");
+		wsRef.current = ws;
+
+		ws.onopen = () => {
+			ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [`trade:${symbol}`] }));
+		};
+
+		ws.onmessage = (msg) => {
+			try {
+				const parsed = JSON.parse(msg.data);
+				if (parsed.event === "trade") {
+					setTrades((prev) => [{ ...parsed, maker: parsed.maker }, ...prev].slice(0, 50));
+				}
+			} catch {}
+		};
+
+		return () => {
+			ws.close();
+			wsRef.current = null;
+		};
+	}, [symbol]);
+
+	if (loading) {
+		return (
+			<div className="flex h-full flex-col p-4 gap-2">
+				{Array.from({ length: 10 }).map((_, i) => (
+					<Skeleton key={i} className="h-3 w-full" />
+				))}
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex h-full flex-col select-none">
+			<div className="flex border-b border-border/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 bg-muted/5">
+				<span className="flex-1">Price (USD)</span>
+				<span className="flex-1 text-right">Size ({symbol.split("_")[0]})</span>
+				<span className="flex-1 text-right"></span>
+			</div>
+
+			<div className="flex-1 overflow-y-auto py-1.5">
+				{trades.length === 0 ? (
+					<div className="flex items-center justify-center h-full text-xs text-muted-foreground/50">
+						No trades yet
+					</div>
+				) : (
+					trades.map((t, i) => (
+						<div
+							key={t.id ?? i}
+							className="flex py-1.5 px-4 text-xs font-mono hover:bg-muted/10 transition-colors"
+						>
+							<span
+								className={`flex-1 font-medium ${
+									t.maker === null
+										? "text-foreground/80"
+										: t.maker
+											? "text-destructive/80"
+											: "text-success/80"
+								}`}
+							>
+								{t.price}
+							</span>
+							<span className="flex-1 text-right text-muted-foreground/80">{t.qty}</span>
+							<span className="flex-1 text-right text-muted-foreground/40">
+								{formatTime(t.timestamp)}
+							</span>
+						</div>
+					))
+				)}
+			</div>
+		</div>
+	);
+}

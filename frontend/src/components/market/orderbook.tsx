@@ -81,19 +81,6 @@ export function Orderbook({
 
 	return (
 		<div className="flex h-full flex-col select-none">
-			<div className="flex items-center justify-between border-b border-border/40 px-4 py-3 bg-muted/15">
-				<div className="flex items-center gap-2">
-					<h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-						Order Book
-					</h2>
-					<div
-						className="flex h-1.5 w-1.5 rounded-full bg-success animate-pulse"
-						title="Live matching engine"
-					/>
-				</div>
-				<Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-foreground cursor-pointer transition-colors" />
-			</div>
-
 			<div className="flex border-b border-border/30 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 bg-muted/5">
 				<span className="flex-1">Price (USD)</span>
 				<span className="flex-1 text-right">Size ({symbol.split("_")[0]})</span>

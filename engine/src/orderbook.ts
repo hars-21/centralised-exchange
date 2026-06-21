@@ -162,13 +162,13 @@ export function publishFill({
 	symbol,
 	price,
 	qty,
-	side,
+	maker,
 	timestamp,
 }: {
 	symbol: string;
 	price: number;
 	qty: number;
-	side: Side;
+	maker: boolean;
 	timestamp: number;
 }) {
 	const message: EventMessage = {
@@ -176,7 +176,7 @@ export function publishFill({
 		symbol,
 		price,
 		qty,
-		maker: side !== "BUY",
+		maker,
 		id: LastFillID++,
 		timestamp,
 	};
