@@ -1,6 +1,6 @@
 import { lockBalance, releaseBalance, settleFills } from "./balance";
 import { removeOrderFromBook } from "./orderbook";
-import { ORDERS } from "./store";
+import { FILLS, ORDERS } from "./store";
 import type { CreateOrderInput, OrderRecord } from "./types/domain";
 import { matchOrder } from "./matching";
 
@@ -84,4 +84,10 @@ export function cancelOrder(userId: string, orderId: string) {
 		filledQty: order.filledQty,
 		releasedFunds,
 	};
+}
+
+export function getFills(symbol: string, limit: number = 100) {
+	return FILLS.filter((f) => f.symbol === symbol)
+		.reverse()
+		.slice(0, limit);
 }

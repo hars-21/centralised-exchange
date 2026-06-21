@@ -104,12 +104,13 @@ export async function getMarkets(_req: Request, res: Response) {
 
 		res.status(200).json({ data: markets });
 	} catch (e) {
-		res.status(401).json({ error: "error fetching markets" });
+		res.status(500).json({ error: "error fetching markets" });
 	}
 }
 
 export async function getTrades(req: Request, res: Response) {
 	const parsedParams = symbolParamSchema.safeParse(req.params);
+	const { limit = 100 } = req.query;
 
 	if (!parsedParams.success) {
 		sendValidationError(res, parsedParams.error);
@@ -118,17 +119,14 @@ export async function getTrades(req: Request, res: Response) {
 
 	const { symbol } = parsedParams.data;
 
-	try {
-		const trades = await prisma.fill.findMany({
-			where: {
-				symbol,
-			},
-		});
+	const engineResponse = await sendToEngine("get_trades", { symbol, limit });
 
-		res.status(200).json({ data: trades });
-	} catch (e) {
-		res.status(401).json({ error: "error fetching trades" });
+	if (!engineResponse.success) {
+		res.status(400).json({ error: engineResponse.error });
+		return;
 	}
+
+	res.status(200).json(engineResponse.data);
 }
 
 export async function getDepth(req: Request, res: Response) {

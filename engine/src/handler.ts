@@ -1,11 +1,12 @@
 import { getUserBalance } from "./balance";
-import { cancelOrder, getOpenOrders, getOrder, placeOrder } from "./order";
+import { cancelOrder, getFills, getOpenOrders, getOrder, placeOrder } from "./order";
 import { getDepth } from "./orderbook";
 import type { EngineCommandType, EngineRequest } from "./types/request";
 import {
 	orderIdPayloadSchema,
 	orderPayloadSchema,
 	symbolPayloadSchema,
+	tradesPayloadSchema,
 	userPayloadSchema,
 } from "./types/order";
 
@@ -40,6 +41,12 @@ const handlers: Record<EngineCommandType, Handler> = {
 		const parsed = userPayloadSchema.safeParse(payload);
 		if (!parsed.success) throw new Error("Invalid userId");
 		return getOpenOrders(parsed.data.userId);
+	},
+
+	get_trades: (payload) => {
+		const parsed = tradesPayloadSchema.safeParse(payload);
+		if (!parsed.success) throw new Error("Invalid trades payload");
+		return getFills(parsed.data.symbol, parsed.data.limit);
 	},
 
 	cancel_order: (payload) => {
