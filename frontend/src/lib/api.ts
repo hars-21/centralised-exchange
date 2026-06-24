@@ -1,6 +1,6 @@
 import type { CancelResult, DepthSnapshot, Fill, OrderResult, UserData } from "@/types/api";
 import { env } from "./env";
-import type { Market, OrderRecord, UserBalance } from "@/types";
+import type { Candle, Market, OrderRecord, UserBalance } from "@/types";
 
 const BASE = env.apiBaseUrl;
 
@@ -50,6 +50,10 @@ export const api = {
 
 	getTrades(symbol: string): Promise<Fill[]> {
 		return request<Fill[]>(`/markets/${symbol}/trades`);
+	},
+
+	getCandles(symbol: string): Promise<{ data: Omit<Candle, "symbol" | "event">[] }> {
+		return request<{ data: Omit<Candle, "symbol" | "event">[] }>(`/markets/${symbol}/candles`);
 	},
 
 	getBalance(): Promise<UserBalance> {

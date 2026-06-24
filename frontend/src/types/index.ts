@@ -55,3 +55,14 @@ export interface Market {
 	symbol: string;
 	name: string;
 }
+
+export interface Candle {
+	event?: string;
+	time: number;
+	open: number;
+	high: number;
+	low: number;
+	close: number;
+	volume: number;
+	symbol: string;
+}

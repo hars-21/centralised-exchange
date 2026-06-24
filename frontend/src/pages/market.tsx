@@ -5,6 +5,7 @@ import { Orderbook } from "../components/market/orderbook";
 import { Trades } from "../components/market/trades";
 import { TradeForm } from "../components/market/trade-form";
 import { OpenOrders } from "../components/market/open-orders";
+import { Chart } from "../components/market/chart";
 import { Button } from "../components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -159,13 +160,8 @@ export function MarketPage() {
 								</div>
 							</div>
 						) : (
-							<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs flex items-center justify-center min-h-50">
-								<div className="text-center p-6">
-									<p className="text-sm font-medium">Chart Visualization</p>
-									<p className="text-xs text-muted-foreground mt-1">
-										Replay and strategy analytics coming soon
-									</p>
-								</div>
+							<div className="flex-1 bg-card rounded-xl border border-border/40 shadow-xs min-h-50 overflow-hidden p-1">
+								<Chart symbol={symbol} />
 							</div>
 						)}
 

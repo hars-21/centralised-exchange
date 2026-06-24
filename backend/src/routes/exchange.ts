@@ -10,6 +10,7 @@ import {
 	getOrder,
 	getOpenOrders,
 	getTrades,
+	getCandles,
 } from "../controllers/exchange";
 
 export const exchangeRouter = Router();
@@ -24,6 +25,7 @@ exchangeRouter.delete("/orders/:orderId", requireAuth, asyncHandler(cancelOrder)
 exchangeRouter.get("/markets", asyncHandler(getMarkets));
 exchangeRouter.get("/markets/:symbol/depth", asyncHandler(getDepth));
 exchangeRouter.get("/markets/:symbol/trades", asyncHandler(getTrades));
+exchangeRouter.get("/markets/:symbol/candles", asyncHandler(getCandles));
 
 // Balances
 exchangeRouter.get("/balances", requireAuth, asyncHandler(getBalance));

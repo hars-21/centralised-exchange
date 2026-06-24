@@ -81,7 +81,7 @@ async function flushCandles() {
 			const timestamp = new Date(candle.time);
 
 			try {
-				await publisher.publish(`candle:${candle.symbol}`, JSON.stringify(candle));
+				await publisher.publish(`candle:${candle.symbol}`, JSON.stringify({ event: "candle", ...candle }));
 
 				await pool.query(
 					`INSERT INTO "Candle" (symbol, open, high, low, close, volume, timestamp) Values ($1, $2, $3, $4, $5, $6, $7)`,

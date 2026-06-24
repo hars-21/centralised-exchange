@@ -149,6 +149,47 @@ export async function getDepth(req: Request, res: Response) {
 	res.status(200).json(engineResponse.data);
 }
 
+// Candles
+export async function getCandles(req: Request, res: Response) {
+	const parsedParams = symbolParamSchema.safeParse(req.params);
+
+	if (!parsedParams.success) {
+		sendValidationError(res, parsedParams.error);
+		return;
+	}
+
+	const { symbol } = parsedParams.data;
+	const from = req.query.from ? new Date(Number(req.query.from)) : undefined;
+	const to = req.query.to ? new Date(Number(req.query.to)) : undefined;
+
+	const candles = await prisma.candle.findMany({
+		where: {
+			symbol,
+			...(from || to
+				? {
+						timestamp: {
+							...(from ? { gte: from } : {}),
+							...(to ? { lte: to } : {}),
+						},
+					}
+				: {}),
+		},
+		orderBy: { timestamp: "asc" },
+		take: 500,
+	});
+
+	res.status(200).json({
+		data: candles.map((c) => ({
+			time: c.timestamp.getTime(),
+			open: c.open,
+			high: c.high,
+			low: c.low,
+			close: c.close,
+			volume: c.volume,
+		})),
+	});
+}
+
 // Balances
 export async function getBalance(req: Request, res: Response) {
 	const userId = getUserId(req);
