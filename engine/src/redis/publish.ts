@@ -7,4 +7,10 @@ export async function publishEvent(message: EventMessage) {
 	}
 
 	await publisher.publish(`${message.event}:${message.symbol}`, JSON.stringify(message));
+
+	if (message.event === "trade") {
+		await publisher.xAdd(`${message.event}`, "*", {
+			data: JSON.stringify(message),
+		});
+	}
 }
