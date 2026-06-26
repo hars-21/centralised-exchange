@@ -1,8 +1,20 @@
 import type { Request, Response } from "express";
-import { orderBodySchema, orderIdParamSchema, symbolParamSchema } from "../types/exchange";
+import {
+	candleQuerySchema,
+	orderBodySchema,
+	orderIdParamSchema,
+	symbolParamSchema,
+} from "../types/exchange";
 import { sendToEngine } from "../utils/engineClient";
 import { prisma } from "../db";
 import { sendValidationError } from "../utils/validation";
+
+const intervalMap = {
+	"15M": "15 minutes",
+	"1H": "1 hour",
+	"4H": "4 hours",
+	"1D": "1 day",
+};
 
 export function getUserId(req: Request): string {
 	if (!req.userId) {
@@ -152,41 +164,45 @@ export async function getDepth(req: Request, res: Response) {
 // Candles
 export async function getCandles(req: Request, res: Response) {
 	const parsedParams = symbolParamSchema.safeParse(req.params);
+	const parsedQueries = candleQuerySchema.safeParse(req.query);
 
 	if (!parsedParams.success) {
 		sendValidationError(res, parsedParams.error);
 		return;
 	}
 
-	const { symbol } = parsedParams.data;
-	const from = req.query.from ? new Date(Number(req.query.from)) : undefined;
-	const to = req.query.to ? new Date(Number(req.query.to)) : undefined;
+	if (!parsedQueries.success) {
+		sendValidationError(res, parsedQueries.error);
+		return;
+	}
 
-	const candles = await prisma.candle.findMany({
-		where: {
-			symbol,
-			...(from || to
-				? {
-						timestamp: {
-							...(from ? { gte: from } : {}),
-							...(to ? { lte: to } : {}),
-						},
-					}
-				: {}),
-		},
-		orderBy: { timestamp: "asc" },
-		take: 500,
-	});
+	const { symbol } = parsedParams.data;
+	const { interval = "15M" } = parsedQueries.data;
+	const bucket = intervalMap[interval];
+
+	const candles = await prisma.$queryRaw`
+  SELECT
+    (EXTRACT(EPOCH FROM bucket) * 1000)::float8 AS "time",
+    symbol, open, high, low, close,
+    volume::float8
+  FROM (
+    SELECT
+      time_bucket(${bucket}, "time") AS bucket,
+      symbol,
+	  FIRST(open, "time") AS open,
+      MAX(high) AS high,
+      MIN(low) AS low,
+	  LAST(close, "time") AS close,
+      SUM(volume)::float8 AS volume
+    FROM "Candle"
+    WHERE symbol = ${symbol}
+    GROUP BY bucket, symbol
+  ) sub
+  ORDER BY "time";
+`;
 
 	res.status(200).json({
-		data: candles.map((c) => ({
-			time: c.timestamp.getTime(),
-			open: c.open,
-			high: c.high,
-			low: c.low,
-			close: c.close,
-			volume: c.volume,
-		})),
+		data: candles,
 	});
 }
 

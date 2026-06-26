@@ -52,8 +52,13 @@ export const api = {
 		return request<Fill[]>(`/markets/${symbol}/trades`);
 	},
 
-	getCandles(symbol: string): Promise<{ data: Omit<Candle, "symbol" | "event">[] }> {
-		return request<{ data: Omit<Candle, "symbol" | "event">[] }>(`/markets/${symbol}/candles`);
+	getCandles(
+		symbol: string,
+		interval: string,
+	): Promise<{ data: Omit<Candle, "symbol" | "event">[] }> {
+		return request<{ data: Omit<Candle, "symbol" | "event">[] }>(
+			`/markets/${symbol}/candles?interval=${interval}`,
+		);
 	},
 
 	getBalance(): Promise<UserBalance> {

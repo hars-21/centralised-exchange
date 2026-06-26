@@ -82,7 +82,7 @@ export function Chart({ symbol }: ChartProps) {
 			scaleMargins: { top: 0.8, bottom: 0 },
 		});
 
-		api.getCandles(symbol).then(({ data }) => {
+		api.getCandles(symbol, interval).then(({ data }) => {
 			if (data.length > 0) {
 				setLatestCandle(data[data.length - 1] ?? null);
 			}
@@ -160,7 +160,7 @@ export function Chart({ symbol }: ChartProps) {
 			observer.disconnect();
 			chart.remove();
 		};
-	}, [symbol]);
+	}, [symbol, interval]);
 
 	const displayCandle = hoveredCandle || latestCandle;
 	const isUp = displayCandle ? (displayCandle.close ?? 0) >= (displayCandle.open ?? 0) : true;

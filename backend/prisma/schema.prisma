@@ -96,9 +96,9 @@ model Candle {
   high      Int
   low       Int
   close     Int
-  volume    Int
-  timestamp DateTime @db.Timestamptz()
+	volume    Int
+	time      DateTime @db.Timestamptz()
 
-  @@unique([symbol, timestamp])
-  @@index([timestamp])
+	@@unique([symbol, time])
+	@@index([time])
 }

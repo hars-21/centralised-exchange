@@ -28,3 +28,7 @@ export const orderBodySchema = z.discriminatedUnion("type", [
 		qty: z.number().positive("qty must be a positive number"),
 	}),
 ]);
+
+export const candleQuerySchema = z.object({
+	interval: z.enum(["15M", "1H", "4H", "1D"]).optional(),
+});

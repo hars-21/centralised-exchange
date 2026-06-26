@@ -84,7 +84,7 @@ async function flushCandles() {
 				await publisher.publish(`candle:${candle.symbol}`, JSON.stringify({ event: "candle", ...candle }));
 
 				await pool.query(
-					`INSERT INTO "Candle" (symbol, open, high, low, close, volume, timestamp) Values ($1, $2, $3, $4, $5, $6, $7)`,
+					`INSERT INTO "Candle" (symbol, open, high, low, close, volume, time) Values ($1, $2, $3, $4, $5, $6, $7)`,
 					[
 						candle.symbol,
 						candle.open,
