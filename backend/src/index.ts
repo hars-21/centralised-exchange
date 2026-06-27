@@ -1,61 +1,44 @@
 import "dotenv";
-import express, { type NextFunction, type Request, type Response } from "express";
-import {
-	connectRedis,
-	listenForEngineresponses,
-	listenForOrderbookDepth,
-	pingRedis,
-} from "./utils/engineClient";
-import { WebSocketServer } from "ws";
-import { subscriptionHandler } from "./utils/websocket";
-import { appRouter } from "./routes";
-import { env } from "./utils/env";
-import cors from "cors";
+import { engineAbortController, listenForEngineresponses, listenForOrderbookDepth } from "./utils/engineClient";
+import { config } from "./config";
+import { createAppServer } from "./server";
+import { connectRedis, disconnectRedis } from "./redis";
+import { prisma } from "./db";
 
-await connectRedis();
-void listenForEngineresponses();
-void listenForOrderbookDepth();
+const { httpServer, wss } = createAppServer();
 
-const app = express();
+async function main() {
+	await connectRedis();
 
-const wss = new WebSocketServer({ port: env.websocketPort }, () => {
-	console.log(`WebSocket server running on http://localhost:${env.websocketPort}`);
-});
-subscriptionHandler(wss);
+	listenForEngineresponses().catch((err) => console.error("Engine listener error:", err));
+	listenForOrderbookDepth().catch((err) => console.error("Orderbook listener error:", err));
 
-const corsOptions = {
-	origin: "http://localhost:3000",
-	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-	optionsSuccessStatus: 200,
-	credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.get("/", (_req: Request, res: Response) => {
-	res.status(200).json({
-		message: "Welcome to Centralised Exchange",
-		status: "running",
-		success: true,
+	httpServer.listen(config.app.port, () => {
+		console.log(`HTTP + WS server running on port ${config.app.port}`);
 	});
-});
+}
 
-app.get("/health", async (_req: Request, res: Response) => {
-	await pingRedis();
-	res.status(200).json({ success: true });
-});
+async function gracefulShutdown(signal: string) {
+	console.log(`Received ${signal}, shutting down gracefully...`);
 
-app.use("/", appRouter);
+	const forceExit = setTimeout(() => {
+		console.error("Graceful shutdown timed out, forcing exit");
+		process.exit(1);
+	}, 10000);
 
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-	console.error(err);
-	res.status(500).json({
-		error: err instanceof Error ? err.message : "internal server error",
-	});
-});
+	engineAbortController.abort();
 
-app.listen(env.port, () => {
-	console.log(`Server running on http://localhost:${env.port}`);
-});
+	httpServer.close();
+	wss.close();
+
+	await disconnectRedis();
+	await prisma.$disconnect();
+
+	clearTimeout(forceExit);
+	process.exit(0);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+main();

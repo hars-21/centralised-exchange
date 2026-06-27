@@ -1,46 +1,63 @@
+import "dotenv/config";
 import { pool } from "./db";
-import { connectRedis, publisher, streamReader } from "./redis";
+import { connectRedis, disconnectRedis, publisher, streamReader } from "./redis";
 import type { Candle, Trade } from "./types";
 
-await connectRedis();
-
-let isFlushing = false;
-let lastID = (await streamReader.get("candle_worker_id")) ?? "0-0";
+const abortController = new AbortController();
 const openCandles: Map<string, Candle> = new Map();
 
-setTimeout(
-	() => {
-		setInterval(async () => {
-			if (isFlushing) return;
+await connectRedis();
+let lastID = (await streamReader.get("candle_worker_id")) ?? "0-0";
 
-			isFlushing = true;
+const flushInterval = setTimeout(
+	() => {
+		const id = setInterval(async () => {
+			if (abortController.signal.aborted) {
+				clearInterval(id);
+				return;
+			}
+
 			try {
 				await flushCandles();
-			} finally {
-				isFlushing = false;
+			} catch (err) {
+				console.error("Flush error:", err);
 			}
 		}, 60000);
 	},
 	60000 - (Date.now() % 60000),
 );
 
-for (;;) {
-	const streams = await streamReader.xRead({ key: "trade", id: lastID }, { BLOCK: 0 });
-	if (!streams) continue;
+processMessages().catch((err) => console.error("Worker process error:", err));
 
-	for (const stream of streams) {
-		for (const message of stream.messages) {
-			const msg = message.message;
+async function processMessages() {
+	const signal = abortController.signal;
 
-			try {
-				const trade: Trade = JSON.parse(msg.data);
-				deriveData(trade);
-				await streamReader.set("candle_worker_id", message.id);
-			} catch (err) {
-				console.error(err);
+	for (;;) {
+		if (signal.aborted) break;
+
+		try {
+			const streams = await streamReader.xRead({ key: "trade", id: lastID }, { BLOCK: 5000 });
+			if (signal.aborted) break;
+			if (!streams) continue;
+
+			for (const stream of streams) {
+				for (const message of stream.messages) {
+					const msg = message.message;
+
+					try {
+						const trade: Trade = JSON.parse(msg.data);
+						deriveData(trade);
+						await streamReader.set("candle_worker_id", message.id);
+					} catch (err) {
+						console.error(err);
+					}
+
+					lastID = message.id;
+				}
 			}
-
-			lastID = message.id;
+		} catch (err) {
+			if (signal.aborted) break;
+			console.error("Stream read error:", err);
 		}
 	}
 }
@@ -103,3 +120,25 @@ async function flushCandles() {
 		}
 	}
 }
+
+async function gracefulShutdown(signal: string) {
+	console.log(`Received ${signal}, shutting down...`);
+
+	const forceExit = setTimeout(() => {
+		console.error("Graceful shutdown timed out, forcing exit");
+		process.exit(1);
+	}, 10000);
+
+	abortController.abort();
+	clearTimeout(flushInterval);
+
+	await flushCandles();
+	await disconnectRedis();
+	await pool.end();
+
+	clearTimeout(forceExit);
+	process.exit(0);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

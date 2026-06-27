@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { env } from "./env";
+import { config } from "../config";
 import cookie from "cookie";
 
 interface TokenPayload {
@@ -8,7 +8,7 @@ interface TokenPayload {
 }
 
 export function createToken(payload: TokenPayload): string {
-	return jwt.sign(payload, env.jwtSecret, { expiresIn: "7d" });
+	return jwt.sign(payload, config.auth.jwtSecret, { expiresIn: "7d" });
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +21,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 	}
 
 	try {
-		const payload = jwt.verify(token, env.jwtSecret) as TokenPayload;
+		const payload = jwt.verify(token, config.auth.jwtSecret) as TokenPayload;
 		req.userId = payload.id;
 		next();
 	} catch (e) {

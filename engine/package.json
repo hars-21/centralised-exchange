@@ -4,7 +4,10 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "bun --watch run src/index.ts"
+		"dev": "bun --watch run src/index.ts",
+		"build": "bun build --production --target=bun src/index.ts --outdir dist",
+		"start": "bun run dist/index.js",
+		"test": "bun test"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

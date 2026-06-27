@@ -1,9 +1,9 @@
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { env } from "./utils/env";
+import { config } from "./config";
 
 const adapter = new PrismaPg({
-	connectionString: env.databaseUrl,
+	connectionString: config.db.url,
 });
 
 export const prisma = new PrismaClient({

@@ -1,8 +1,8 @@
 import type { CancelResult, DepthSnapshot, Fill, OrderResult, UserData } from "@/types/api";
-import { env } from "./env";
+import { config } from "./env";
 import type { Candle, Market, OrderRecord, UserBalance } from "@/types";
 
-const BASE = env.apiBaseUrl;
+const BASE = config.apiBaseUrl;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 	const res = await fetch(`${BASE}${path}`, {

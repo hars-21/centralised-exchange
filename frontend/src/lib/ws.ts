@@ -1,4 +1,4 @@
-import { env } from "./env";
+import { config } from "./env";
 
 type Handler = (data: unknown) => void;
 
@@ -15,7 +15,7 @@ class WebSocketManager {
 	private connect() {
 		if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
 
-		this.socket = new WebSocket(env.wsUrl);
+		this.socket = new WebSocket(config.wsUrl);
 
 		this.socket.onopen = () => {
 			this.retryCount = 0;
@@ -31,7 +31,9 @@ class WebSocketManager {
 				const channel = data.event ? `${data.event}:${data.symbol}` : null;
 				if (!channel) return;
 				this.subscriptions.get(channel)?.forEach((h) => h(data));
-			} catch {}
+			} catch (err) {
+				console.error("WS message parse error:", err, event.data);
+			}
 		};
 
 		this.socket.onclose = () => {

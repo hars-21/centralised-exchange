@@ -1,11 +1,9 @@
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
+import { env } from "../src/config";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error("Missing DATABASE_URL");
-
-const adapter = new PrismaPg({ connectionString: databaseUrl });
+const adapter = new PrismaPg({ connectionString: env.databaseUrl });
 const prisma = new PrismaClient({ adapter });
 
 async function seed() {
@@ -41,7 +39,11 @@ async function seed() {
 	process.exit(0);
 }
 
-seed().catch((err) => {
-	console.error("Seed failed:", err);
-	process.exit(1);
-});
+seed()
+	.catch((err) => {
+		console.error("Seed failed:", err);
+		process.exit(1);
+	})
+	.finally(() => {
+		prisma.$disconnect;
+	});

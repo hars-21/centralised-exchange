@@ -1,10 +1,13 @@
-const API_BASE_URL =
-	(typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) || "http://localhost:8000";
+import z from "zod";
 
-const WS_URL =
-	(typeof process !== "undefined" && process.env?.VITE_WS_URL) || "ws://localhost:8080";
+const envSchema = z.object({
+	VITE_API_BASE_URL: z.string().default("http://localhost:8000"),
+	VITE_WS_URL: z.string().default("ws://localhost:8080"),
+});
 
-export const env = {
-	apiBaseUrl: API_BASE_URL,
-	wsUrl: WS_URL,
-} as const;
+const parsed = envSchema.parse(process.env);
+
+export const config = {
+	apiBaseUrl: parsed.VITE_API_BASE_URL,
+	wsUrl: parsed.VITE_WS_URL,
+};

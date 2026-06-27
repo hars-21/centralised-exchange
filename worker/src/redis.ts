@@ -1,13 +1,18 @@
 import { createClient } from "redis";
+import { config } from "./config";
 
-export const publisher = createClient({ url: process.env.REDIS_URL }).on("error", (err) =>
+export const publisher = createClient({ url: config.redisUrl }).on("error", (err) =>
 	console.log("Redis client error: ", err),
 );
 
-export const streamReader = createClient({ url: process.env.REDIS_URL }).on("error", (err) =>
+export const streamReader = createClient({ url: config.redisUrl }).on("error", (err) =>
 	console.log("Redis client error: ", err),
 );
 
 export async function connectRedis() {
 	return Promise.all([publisher.connect(), streamReader.connect()]);
+}
+
+export async function disconnectRedis() {
+	await Promise.allSettled([publisher.quit(), streamReader.quit()]);
 }
