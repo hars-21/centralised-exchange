@@ -1,13 +1,22 @@
-import z from "zod";
+function readEnv(key: string, fallback: string): string {
+	const val =
+		typeof process !== "undefined" && process.env
+			? (process.env[key] ?? process.env[`VITE_${key}`])
+			: undefined;
 
-const envSchema = z.object({
-	VITE_API_BASE_URL: z.string().default("http://localhost:8000"),
-	VITE_WS_URL: z.string().default("ws://localhost:8080"),
-});
+	if (
+		val &&
+		!val.startsWith("http://") &&
+		!val.startsWith("ws://") &&
+		!val.startsWith("https://")
+	) {
+		throw new Error(`Invalid ${key}: must be a valid URL`);
+	}
 
-const parsed = envSchema.parse(process.env);
+	return val ?? fallback;
+}
 
 export const config = {
-	apiBaseUrl: parsed.VITE_API_BASE_URL,
-	wsUrl: parsed.VITE_WS_URL,
-};
+	apiBaseUrl: readEnv("API_BASE_URL", "http://localhost:8000"),
+	wsUrl: readEnv("WS_URL", "ws://localhost:8000"),
+} as const;

@@ -14,6 +14,8 @@ const envSchema = z.object({
 	INCOMING_STREAM: z.string().default("backend-to-engine-broker"),
 	BACKEND_QUEUE_ID: z.string().default(crypto.randomUUID()),
 	ENGINE_TIMEOUT_MS: z.coerce.number().default(30000),
+
+	LOG_LEVEL: z.enum(["debug", "info"]),
 });
 
 const env = envSchema.parse(process.env);
@@ -22,6 +24,7 @@ export const config = {
 	app: {
 		env: env.NODE_ENV,
 		port: env.PORT,
+		logLevel: env.LOG_LEVEL,
 	},
 
 	engine: {

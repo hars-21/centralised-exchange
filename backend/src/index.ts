@@ -1,8 +1,13 @@
 import "dotenv";
-import { engineAbortController, listenForEngineresponses, listenForOrderbookDepth } from "./utils/engineClient";
+import {
+	engineAbortController,
+	listenForEngineresponses,
+	listenForOrderbookDepth,
+} from "./utils/engineClient";
 import { config } from "./config";
 import { createAppServer } from "./server";
 import { connectRedis, disconnectRedis } from "./redis";
+import { logger } from "./utils/logger";
 import { prisma } from "./db";
 
 const { httpServer, wss } = createAppServer();
@@ -10,19 +15,19 @@ const { httpServer, wss } = createAppServer();
 async function main() {
 	await connectRedis();
 
-	listenForEngineresponses().catch((err) => console.error("Engine listener error:", err));
-	listenForOrderbookDepth().catch((err) => console.error("Orderbook listener error:", err));
+	listenForEngineresponses().catch((err) => logger.error("Engine listener error", err));
+	listenForOrderbookDepth().catch((err) => logger.error("Orderbook listener error", err));
 
 	httpServer.listen(config.app.port, () => {
-		console.log(`HTTP + WS server running on port ${config.app.port}`);
+		logger.info(`HTTP + WS server running on port ${config.app.port}`);
 	});
 }
 
 async function gracefulShutdown(signal: string) {
-	console.log(`Received ${signal}, shutting down gracefully...`);
+	logger.info(`Received ${signal}, shutting down gracefully...`);
 
 	const forceExit = setTimeout(() => {
-		console.error("Graceful shutdown timed out, forcing exit");
+		logger.error("Graceful shutdown timed out, forcing exit");
 		process.exit(1);
 	}, 10000);
 

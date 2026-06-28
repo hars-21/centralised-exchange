@@ -1,5 +1,6 @@
 import { publishEvent } from "./redis/publish";
 import { ORDERBOOK } from "./store";
+import { logger } from "./logger";
 import type { Depth, OrderRecord, PriceLevel, RestingOrder, Side } from "./types/domain";
 import type { EventMessage } from "./types/event";
 
@@ -153,8 +154,8 @@ export function publishDepth({
 		...depth,
 	};
 
-	void publishEvent(message).catch((err) => {
-		console.error("Failed to publish depth", err);
+	publishEvent(message).catch((err) => {
+		logger.error("Failed to publish depth", err);
 	});
 }
 
@@ -181,7 +182,7 @@ export function publishFill({
 		timestamp,
 	};
 
-	void publishEvent(message).catch((err) => {
-		console.error("Failed to publish trade", err);
+	publishEvent(message).catch((err) => {
+		logger.error("Failed to publish trade", err);
 	});
 }

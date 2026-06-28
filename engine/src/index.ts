@@ -2,12 +2,13 @@ import { handleEngineRequest } from "./handler";
 import type { EngineRequest, EngineResponse } from "./types/request";
 import { connectRedis, disconnectRedis, publisher, subscriber } from "./redis/client";
 import { config } from "./config";
+import { logger } from "./logger";
 
 const abortController = new AbortController();
 let lastID = "0-0";
 
 await connectRedis();
-console.log(`Engine listening on Redis queue: ${config.incomingStream}`);
+logger.info(`Engine listening on Redis queue: ${config.incomingStream}`);
 
 async function sendResponse(responseQueue: string, response: EngineResponse) {
 	await publisher.lPush(responseQueue, JSON.stringify(response));
@@ -48,10 +49,10 @@ async function processMessages() {
 							type: msg.type,
 							payload: JSON.parse(msg.payload),
 						};
-					} catch (err) {
-						console.error("Skipping invalid broker message");
-						continue;
-					}
+			} catch (err) {
+				logger.error("Skipping invalid broker message");
+				continue;
+			}
 
 					try {
 						const data = handleEngineRequest(request);
@@ -81,18 +82,18 @@ async function processMessages() {
 			}
 		} catch (err) {
 			if (signal.aborted) break;
-			console.error("Stream read error:", err);
+			logger.error("Stream read error", err);
 		}
 	}
 }
 
-processMessages().catch((err) => console.error("Engine process error:", err));
+processMessages().catch((err) => logger.error("Engine process error", err));
 
 async function gracefulShutdown(signal: string) {
-	console.log(`Received ${signal}, shutting down...`);
+	logger.info(`Received ${signal}, shutting down...`);
 
 	const forceExit = setTimeout(() => {
-		console.error("Graceful shutdown timed out, forcing exit");
+		logger.error("Graceful shutdown timed out, forcing exit");
 		process.exit(1);
 	}, 10000);
 

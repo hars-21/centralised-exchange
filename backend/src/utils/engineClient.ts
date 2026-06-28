@@ -2,6 +2,7 @@ import type { EngineCommandType, EngineResponse } from "../types/engine";
 import { resolveEngineResponse, waitForEngineResponse } from "../store/pendingResponses";
 import { activeSubscriptions } from "./websocket";
 import { config } from "../config";
+import { logger } from "./logger";
 import { marketSubscriber, publisher, responsesubscriber } from "../redis";
 
 export const engineAbortController = new AbortController();
@@ -24,7 +25,7 @@ export async function sendToEngine(
 }
 
 export async function listenForEngineresponses(): Promise<void> {
-	console.log(`Listening for engine responses on ${config.engine.responseQueue}`);
+	logger.info(`Listening for engine responses on ${config.engine.responseQueue}`);
 	const signal = engineAbortController.signal;
 
 	for (;;) {
@@ -38,7 +39,7 @@ export async function listenForEngineresponses(): Promise<void> {
 			resolveEngineResponse(parsedResponse);
 		} catch (err) {
 			if (signal.aborted) break;
-			console.error("Engine response listener error: ", err);
+			logger.error("Engine response listener error", err);
 		}
 	}
 }
@@ -52,7 +53,7 @@ export async function listenForOrderbookDepth(): Promise<void> {
 				ws.send(JSON.stringify(parsedData));
 			});
 		} catch (err) {
-			console.error("Invalid depth message:", err);
+			logger.error("Invalid depth message", err);
 		}
 	});
 }

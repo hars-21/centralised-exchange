@@ -2,6 +2,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 import { pingRedis } from "./redis";
 import { appRouter } from "./routes";
 import { config } from "./config";
+import { logger } from "./utils/logger";
 import cors from "cors";
 
 export const app = express();
@@ -26,7 +27,7 @@ app.get("/health", async (_req: Request, res: Response) => {
 app.use("/", appRouter);
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-	console.error(err);
+	logger.error("Unhandled error", err);
 	res.status(500).json({
 		error: err instanceof Error ? err.message : "internal server error",
 	});

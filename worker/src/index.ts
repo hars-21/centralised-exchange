@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { pool } from "./db";
 import { connectRedis, disconnectRedis, publisher, streamReader } from "./redis";
+import { logger } from "./logger";
 import type { Candle, Trade } from "./types";
 
 const abortController = new AbortController();
@@ -20,14 +21,14 @@ const flushInterval = setTimeout(
 			try {
 				await flushCandles();
 			} catch (err) {
-				console.error("Flush error:", err);
+				logger.error("Flush error", err);
 			}
 		}, 60000);
 	},
 	60000 - (Date.now() % 60000),
 );
 
-processMessages().catch((err) => console.error("Worker process error:", err));
+processMessages().catch((err) => logger.error("Worker process error", err));
 
 async function processMessages() {
 	const signal = abortController.signal;
@@ -49,7 +50,7 @@ async function processMessages() {
 						deriveData(trade);
 						await streamReader.set("candle_worker_id", message.id);
 					} catch (err) {
-						console.error(err);
+						logger.error("Failed to process trade message", err);
 					}
 
 					lastID = message.id;
@@ -57,7 +58,7 @@ async function processMessages() {
 			}
 		} catch (err) {
 			if (signal.aborted) break;
-			console.error("Stream read error:", err);
+			logger.error("Stream read error", err);
 		}
 	}
 }
@@ -113,7 +114,7 @@ async function flushCandles() {
 					],
 				);
 			} catch (err) {
-				console.error(err);
+				logger.error("Failed to flush candle", { symbol: candle.symbol, key });
 			}
 
 			openCandles.delete(key);
@@ -122,10 +123,10 @@ async function flushCandles() {
 }
 
 async function gracefulShutdown(signal: string) {
-	console.log(`Received ${signal}, shutting down...`);
+	logger.info(`Received ${signal}, shutting down...`);
 
 	const forceExit = setTimeout(() => {
-		console.error("Graceful shutdown timed out, forcing exit");
+		logger.error("Graceful shutdown timed out, forcing exit");
 		process.exit(1);
 	}, 10000);
 

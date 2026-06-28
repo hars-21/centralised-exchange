@@ -1,16 +1,17 @@
 import { createClient } from "redis";
 import { config } from "./config";
+import { logger } from "./utils/logger";
 
 export const publisher = createClient({ url: config.redis.url }).on("error", (err) =>
-	console.log("Redis client error: ", err),
+	logger.error("Redis publisher error", { error: (err as Error).message }),
 );
 
 export const responsesubscriber = createClient({ url: config.redis.url }).on("error", (err) =>
-	console.log("Redis client error: ", err),
+	logger.error("Redis response subscriber error", { error: (err as Error).message }),
 );
 
 export const marketSubscriber = createClient({ url: config.redis.url }).on("error", (err) =>
-	console.log("Redis client error: ", err),
+	logger.error("Redis market subscriber error", { error: (err as Error).message }),
 );
 
 export async function connectRedis() {

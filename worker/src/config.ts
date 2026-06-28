@@ -5,6 +5,7 @@ const envSchema = z.object({
 	NODE_ENV: z.enum(["development", "test", "production"]),
 	REDIS_URL: z.string(),
 	DATABASE_URL: z.string(),
+	LOG_LEVEL: z.enum(["debug", "info"]),
 });
 
 const env = envSchema.parse(process.env);
@@ -13,4 +14,5 @@ export const config = {
 	env: env.NODE_ENV,
 	redisUrl: env.REDIS_URL,
 	dbUrl: env.DATABASE_URL,
+	logLevel: env.LOG_LEVEL,
 };
