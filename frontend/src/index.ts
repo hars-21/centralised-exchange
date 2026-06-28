@@ -1,19 +1,35 @@
-import { serve } from "bun";
-import index from "./index.html";
+import { serve, file } from "bun";
 
-const server = serve({
-	routes: {
-		// Serve index.html for all unmatched routes.
-		"/*": index,
-	},
+const production = process.env.NODE_ENV === "production";
 
-	development: process.env.NODE_ENV !== "production" && {
-		// Enable browser hot reloading in development
-		hmr: true,
+if (production) {
+	const server = serve({
+		async fetch(req) {
+			const url = new URL(req.url);
+			const filePath = url.pathname === "/" ? "/index.html" : url.pathname;
+			const f = file(`./dist${filePath}`);
+			const exists = await f.exists();
+			if (exists) return new Response(f);
+			return new Response(file("./dist/index.html"));
+		},
+	});
 
-		// Echo console logs from the browser to the server
-		console: true,
-	},
-});
+	console.log(`🚀 Server running at ${server.url}`);
+} else {
+	const index = await import("./index.html");
+	const server = serve({
+		routes: {
+			"/*": index,
+		},
 
-console.log(`🚀 Server running at ${server.url}`);
+		development: {
+			// Enable browser hot reloading in development
+			hmr: true,
+
+			// Echo console logs from the browser to the server
+			console: true,
+		},
+	});
+
+	console.log(`🚀 Server running at ${server.url}`);
+}

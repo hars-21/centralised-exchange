@@ -1,40 +1,43 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: dev
     ports:
       - 8000:8000
-
     env_file:
       - ./backend/.env
-
+    restart: unless-stopped
     depends_on:
       - postgres
       - redis
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     ports:
       - 3000:3000
-
     env_file:
       - ./frontend/.env
-
     depends_on:
       - backend
 
   engine:
-    build: ./engine
+    build:
+      context: ./engine
+      target: dev
     env_file:
       - ./engine/.env
-
     depends_on:
       - redis
 
   worker:
-    build: ./worker
+    build:
+      context: ./worker
+      target: dev
     env_file:
       - ./worker/.env
-
     depends_on:
       - postgres
       - redis
@@ -45,7 +48,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=secret
       - POSTGRES_DB=exchange
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
