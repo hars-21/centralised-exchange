@@ -1,19 +1,70 @@
 import { expect, test } from "bun:test";
-import { authSchema } from "../src/types/auth";
-import { orderBodySchema, orderIdParamSchema, symbolParamSchema, statusQuerySchema } from "../src/types/exchange";
+import { signupSchema, signinSchema } from "../src/types/auth";
+import {
+	orderBodySchema,
+	orderIdParamSchema,
+	symbolParamSchema,
+	statusQuerySchema,
+} from "../src/types/exchange";
 
-test("auth schema accepts valid input", () => {
-	const result = authSchema.safeParse({ username: "alice", password: "secret123" });
+test("signup schema accepts valid input", () => {
+	const result = signupSchema.safeParse({
+		email: "alice@test.com",
+		username: "alice",
+		password: "secret123",
+	});
 	expect(result.success).toBe(true);
 });
 
-test("auth schema rejects empty username", () => {
-	const result = authSchema.safeParse({ username: " ", password: "secret123" });
+test("signup schema rejects invalid email", () => {
+	const result = signupSchema.safeParse({
+		email: "not-an-email",
+		username: "alice",
+		password: "secret123",
+	});
 	expect(result.success).toBe(false);
 });
 
-test("auth schema rejects empty password", () => {
-	const result = authSchema.safeParse({ username: "alice", password: "" });
+test("signup schema rejects empty username", () => {
+	const result = signupSchema.safeParse({
+		email: "alice@test.com",
+		username: " ",
+		password: "secret123",
+	});
+	expect(result.success).toBe(false);
+});
+
+test("signup schema rejects empty password", () => {
+	const result = signupSchema.safeParse({
+		email: "alice@test.com",
+		username: "alice",
+		password: "",
+	});
+	expect(result.success).toBe(false);
+});
+
+test("signup schema rejects empty email", () => {
+	const result = signupSchema.safeParse({ email: "", username: "alice", password: "secret" });
+	expect(result.success).toBe(false);
+});
+
+test("signin schema accepts email as login", () => {
+	const result = signinSchema.safeParse({ login: "alice@test.com", password: "secret" });
+	expect(result.success).toBe(true);
+});
+
+test("signin schema accepts username as login", () => {
+	const result = signinSchema.safeParse({ login: "alice", password: "secret" });
+	expect(result.success).toBe(true);
+});
+
+test("signin schema rejects empty login", () => {
+	const result = signinSchema.safeParse({ login: " ", password: "secret" });
+	expect(result.success).toBe(false);
+});
+
+test("signin schema rejects empty password", () => {
+	const result = signinSchema.safeParse({ login: "alice", password: "" });
 	expect(result.success).toBe(false);
 });
 

@@ -27,9 +27,6 @@ RUN bun run build
 FROM base AS runner
 
 COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-COPY --from=builder /usr/src/app/package.json ./package.json
-COPY --from=builder /usr/src/app/src ./src
 
 EXPOSE 3000
 

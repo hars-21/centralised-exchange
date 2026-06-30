@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 
 type User = {
 	id: string;
+	email: string;
 	username: string;
 	balance: UserBalance;
 } | null;
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			const data = await api.getMe();
 			setUser({
 				id: data.userId,
+				email: data.email,
 				username: data.username,
 				balance: data.balance,
 			});

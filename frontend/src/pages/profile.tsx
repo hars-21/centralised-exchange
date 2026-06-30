@@ -64,6 +64,10 @@ export function ProfilePage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-sm flex items-center justify-between">
+								<span className="text-muted-foreground">Email</span>
+								<span className="font-mono font-medium text-foreground">{user.email}</span>
+							</div>
+							<div className="text-sm flex items-center justify-between mt-2 pt-2 border-t border-border/20">
 								<span className="text-muted-foreground">Username</span>
 								<span className="font-mono font-medium text-foreground">{user.username}</span>
 							</div>

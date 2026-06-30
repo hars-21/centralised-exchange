@@ -1,9 +1,9 @@
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
-import { env } from "../src/config";
+import { config } from "../src/config";
 
-const adapter = new PrismaPg({ connectionString: env.databaseUrl });
+const adapter = new PrismaPg({ connectionString: config.db.url });
 const prisma = new PrismaClient({ adapter });
 
 async function seed() {
@@ -23,8 +23,8 @@ async function seed() {
 
 	const password = await bcrypt.hash("demo123", 10);
 	const users = [
-		{ username: "alice", password },
-		{ username: "bob", password },
+		{ email: "alice@test.com", username: "alice", password },
+		{ email: "bob@test.com", username: "bob", password },
 	];
 
 	for (const user of users) {

@@ -1,29 +1,26 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../db";
 import type { Request, Response } from "express";
-import { authSchema } from "../types/auth";
+import { signupSchema, signinSchema } from "../types/auth";
 import { createToken } from "../utils/auth";
 import { sendValidationError } from "../utils/validation";
 import { getUserId } from "./exchange";
 import { sendToEngine } from "../utils/engineClient";
 
 export async function signup(req: Request, res: Response) {
-	const parsedBody = authSchema.safeParse(req.body);
+	const parsedBody = signupSchema.safeParse(req.body);
 
 	if (!parsedBody.success) {
 		sendValidationError(res, parsedBody.error);
 		return;
 	}
 
-	const { username, password } = parsedBody.data;
+	const { email, username, password } = parsedBody.data;
 	const hashedPassword = await bcrypt.hash(password, 10);
 
 	try {
 		const user = await prisma.user.create({
-			data: {
-				username,
-				password: hashedPassword,
-			},
+			data: { email, username, password: hashedPassword },
 		});
 
 		res
@@ -43,30 +40,29 @@ export async function signup(req: Request, res: Response) {
 }
 
 export async function signin(req: Request, res: Response) {
-	const parsedBody = authSchema.safeParse(req.body);
+	const parsedBody = signinSchema.safeParse(req.body);
 
 	if (!parsedBody.success) {
 		sendValidationError(res, parsedBody.error);
 		return;
 	}
 
-	const { username, password } = parsedBody.data;
+	const { login, password } = parsedBody.data;
 
 	try {
+		const isEmail = login.includes("@");
 		const user = await prisma.user.findFirst({
-			where: {
-				username,
-			},
+			where: isEmail ? { email: login } : { username: login },
 		});
 
 		if (!user) {
-			res.status(400).json({ error: "Invalid username or password" });
+			res.status(400).json({ error: "Invalid email/username or password" });
 			return;
 		}
 
 		let match = await bcrypt.compare(password, user.password);
 		if (!match) {
-			res.status(400).json({ error: "Invalid username or password" });
+			res.status(400).json({ error: "Invalid email/username or password" });
 			return;
 		}
 
@@ -82,7 +78,7 @@ export async function signin(req: Request, res: Response) {
 				username: user.username,
 			});
 	} catch (e) {
-		res.status(409).json({ error: "username does not exist" });
+		res.status(409).json({ error: "Invalid email/username or password" });
 	}
 }
 
@@ -110,6 +106,7 @@ export async function getUserData(req: Request, res: Response) {
 
 		res.status(200).json({
 			userId: user.id,
+			email: user.email,
 			username: user.username,
 			balance: engineResponse.data,
 		});
