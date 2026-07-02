@@ -1,7 +1,7 @@
 function readEnv(key: string, fallback: string): string {
 	const val =
 		typeof process !== "undefined" && process.env
-			? (process.env[key] ?? process.env[`VITE_${key}`])
+			? (process.env[key] ?? process.env[`BUN_PUBLIC_${key}`])
 			: undefined;
 
 	if (

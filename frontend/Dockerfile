@@ -11,7 +11,7 @@ RUN bun install
 
 COPY . .
 
-CMD [ "bun", "dev" ]
+CMD [ "bun", "run", "dev" ]
 
 FROM base AS builder
 
@@ -24,10 +24,11 @@ COPY . .
 
 RUN bun run build
 
-FROM base AS runner
+FROM nginx:1.27 AS runner
 
-COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3000
+EXPOSE 80
 
-CMD [ "bun", "run", "start" ]
+CMD ["nginx", "-g", "daemon off;"]
