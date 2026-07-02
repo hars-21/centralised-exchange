@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 type User = {
 	id: string;
 	email: string;
-	username: string;
+	name: string;
 	balance: UserBalance;
 } | null;
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			setUser({
 				id: data.userId,
 				email: data.email,
-				username: data.username,
+				name: data.name,
 				balance: data.balance,
 			});
 		} catch {

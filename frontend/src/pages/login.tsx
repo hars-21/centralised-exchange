@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 export function LoginPage() {
-	const [login, setLogin] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const { refreshUser } = useAuth();
@@ -18,15 +18,15 @@ export function LoginPage() {
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!login.trim() || !password.trim()) {
-			toast.error("Please enter both email/username and password");
+		if (!email.trim() || !password.trim()) {
+			toast.error("Please enter both email and password");
 			return;
 		}
 
 		setIsLoading(true);
 
 		try {
-			await api.signin(login, password);
+			await api.signin(email, password);
 			await refreshUser();
 			toast.success("Successfully logged in");
 			navigate("/");
@@ -46,13 +46,13 @@ export function LoginPage() {
 				<CardContent>
 					<form onSubmit={handleLogin} className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="login">Email or Username</Label>
+							<Label htmlFor="email">Email</Label>
 							<Input
-								id="login"
-								type="text"
-								value={login}
-								onChange={(e) => setLogin(e.target.value)}
-								placeholder="Enter your email or username"
+								id="email"
+								type="email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								placeholder="Enter your email"
 							/>
 						</div>
 						<div className="space-y-2">

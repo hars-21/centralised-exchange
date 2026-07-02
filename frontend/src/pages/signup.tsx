@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 export function SignupPage() {
 	const [email, setEmail] = useState("");
-	const [username, setUsername] = useState("");
+	const [name, setName] = useState("");
 	const [password, setPassword] = useState("");
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ export function SignupPage() {
 
 	const handleSignup = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!email.trim() || !username.trim() || !password.trim()) {
+		if (!email.trim() || !name.trim() || !password.trim()) {
 			toast.error("Please fill in all fields");
 			return;
 		}
@@ -33,7 +33,7 @@ export function SignupPage() {
 		setIsLoading(true);
 
 		try {
-			await api.signup(email, username, password);
+			await api.signup(email, name, password);
 			await refreshUser();
 			toast.success("Account created successfully");
 			navigate("/");
@@ -53,6 +53,16 @@ export function SignupPage() {
 				<CardContent>
 					<form onSubmit={handleSignup} className="space-y-4">
 						<div className="space-y-2">
+							<div className="space-y-2">
+								<Label htmlFor="name">Name</Label>
+								<Input
+									id="name"
+									type="text"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									placeholder="Choose a name"
+								/>
+							</div>
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -60,16 +70,6 @@ export function SignupPage() {
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								placeholder="Enter your email"
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="username">Username</Label>
-							<Input
-								id="username"
-								type="text"
-								value={username}
-								onChange={(e) => setUsername(e.target.value)}
-								placeholder="Choose a username"
 							/>
 						</div>
 						<div className="space-y-2">

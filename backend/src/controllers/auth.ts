@@ -15,12 +15,12 @@ export async function signup(req: Request, res: Response) {
 		return;
 	}
 
-	const { email, username, password } = parsedBody.data;
+	const { email, name, password } = parsedBody.data;
 	const hashedPassword = await bcrypt.hash(password, 10);
 
 	try {
 		const user = await prisma.user.create({
-			data: { email, username, password: hashedPassword },
+			data: { email, name, password: hashedPassword },
 		});
 
 		res
@@ -32,10 +32,10 @@ export async function signup(req: Request, res: Response) {
 			})
 			.json({
 				userId: user.id,
-				username: user.username,
+				name: user.name,
 			});
 	} catch (e) {
-		res.status(409).json({ error: "username already exists" });
+		res.status(409).json({ error: "name already exists" });
 	}
 }
 
@@ -47,22 +47,21 @@ export async function signin(req: Request, res: Response) {
 		return;
 	}
 
-	const { login, password } = parsedBody.data;
+	const { email, password } = parsedBody.data;
 
 	try {
-		const isEmail = login.includes("@");
-		const user = await prisma.user.findFirst({
-			where: isEmail ? { email: login } : { username: login },
+		const user = await prisma.user.findUnique({
+			where: { email },
 		});
 
 		if (!user) {
-			res.status(400).json({ error: "Invalid email/username or password" });
+			res.status(400).json({ error: "Invalid email or password" });
 			return;
 		}
 
 		let match = await bcrypt.compare(password, user.password);
 		if (!match) {
-			res.status(400).json({ error: "Invalid email/username or password" });
+			res.status(400).json({ error: "Invalid email or password" });
 			return;
 		}
 
@@ -75,10 +74,10 @@ export async function signin(req: Request, res: Response) {
 			})
 			.json({
 				userId: user.id,
-				username: user.username,
+				name: user.name,
 			});
 	} catch (e) {
-		res.status(409).json({ error: "Invalid email/username or password" });
+		res.status(409).json({ error: "Invalid email or password" });
 	}
 }
 
@@ -107,10 +106,10 @@ export async function getUserData(req: Request, res: Response) {
 		res.status(200).json({
 			userId: user.id,
 			email: user.email,
-			username: user.username,
+			name: user.name,
 			balance: engineResponse.data,
 		});
 	} catch (e) {
-		res.status(409).json({ error: "username does not exist" });
+		res.status(409).json({ error: "name does not exist" });
 	}
 }

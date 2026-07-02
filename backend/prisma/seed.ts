@@ -23,19 +23,19 @@ async function seed() {
 
 	const password = await bcrypt.hash("demo123", 10);
 	const users = [
-		{ email: "alice@test.com", username: "alice", password },
-		{ email: "bob@test.com", username: "bob", password },
+		{ email: "alice@test.com", name: "alice", password },
+		{ email: "bob@test.com", name: "bob", password },
 	];
 
 	for (const user of users) {
 		await prisma.user.upsert({
-			where: { username: user.username },
+			where: { email: user.email },
 			update: {},
 			create: user,
 		});
 	}
 
-	console.log("Seeded: 3 markets, 2 users (alice/bob, password: demo123)");
+	console.log("Seeded: 3 markets, 2 users (alice@test.com, bob@test.com, password: demo123)");
 	process.exit(0);
 }
 

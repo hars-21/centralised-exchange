@@ -26,21 +26,21 @@ export const api = {
 		return request<UserData>("/me");
 	},
 
-	signin(login: string, password: string): Promise<{ userId: string; username: string }> {
-		return request<{ userId: string; username: string }>("/signin", {
+	signin(email: string, password: string): Promise<{ userId: string; name: string }> {
+		return request<{ userId: string; name: string }>("/signin", {
 			method: "POST",
-			body: JSON.stringify({ login, password }),
+			body: JSON.stringify({ email, password }),
 		});
 	},
 
 	signup(
 		email: string,
-		username: string,
+		name: string,
 		password: string,
-	): Promise<{ userId: string; username: string }> {
-		return request<{ userId: string; username: string }>("/signup", {
+	): Promise<{ userId: string; name: string }> {
+		return request<{ userId: string; name: string }>("/signup", {
 			method: "POST",
-			body: JSON.stringify({ email, username, password }),
+			body: JSON.stringify({ email, name, password }),
 		});
 	},
 

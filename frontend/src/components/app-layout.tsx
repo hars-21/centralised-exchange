@@ -63,9 +63,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 								<DropdownMenuTrigger asChild>
 									<Button variant="ghost" size="sm" className="gap-2 px-2.5 cursor-pointer">
 										<div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs uppercase">
-											{user.username[0]}
+											{user.name[0]}
 										</div>
-										<span className="max-w-20 truncate text-xs font-medium">{user.username}</span>
+										<span className="max-w-20 truncate text-xs font-medium">{user.name}</span>
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="w-56 border-border/40">
@@ -73,7 +73,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 										<span className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">
 											Signed in as
 										</span>
-										<span className="font-semibold text-sm truncate mt-0.5">{user.username}</span>
+										<span className="font-semibold text-sm truncate mt-0.5">{user.name}</span>
 									</DropdownMenuLabel>
 									<DropdownMenuSeparator className="border-border/30" />
 									<DropdownMenuGroup>

@@ -3,7 +3,7 @@ import type { UserBalance } from ".";
 export type UserData = {
 	userId: string;
 	email: string;
-	username: string;
+	name: string;
 	balance: UserBalance;
 };
 

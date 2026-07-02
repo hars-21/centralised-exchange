@@ -62,9 +62,9 @@ export function Navbar() {
 							<DropdownMenuTrigger asChild>
 								<Button variant="ghost" size="sm" className="gap-2 px-2.5 cursor-pointer">
 									<div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-xs uppercase">
-										{user.username[0]}
+										{user.name[0]}
 									</div>
-									<span className="max-w-20 truncate text-xs font-medium">{user.username}</span>
+									<span className="max-w-20 truncate text-xs font-medium">{user.name}</span>
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-56 border-border/40">
@@ -72,7 +72,7 @@ export function Navbar() {
 									<span className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">
 										Signed in as
 									</span>
-									<span className="font-semibold text-sm truncate mt-0.5">{user.username}</span>
+									<span className="font-semibold text-sm truncate mt-0.5">{user.name}</span>
 								</DropdownMenuLabel>
 								<DropdownMenuSeparator className="border-border/30" />
 								<DropdownMenuGroup>
@@ -167,9 +167,9 @@ export function Navbar() {
 								<>
 									<div className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground">
 										<div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold uppercase">
-											{user.username[0]}
+											{user.name[0]}
 										</div>
-										<span>{user.username}</span>
+										<span>{user.name}</span>
 									</div>
 									<Link to="/profile" className="w-full" onClick={() => setOpen(false)}>
 										<Button variant="ghost" size="sm" className="w-full justify-start gap-2">
